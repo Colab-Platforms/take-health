@@ -28,22 +28,23 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
           children: [
             const SizedBox(height: 20),
 
-            // ── Title ─────────────────────────────────────────
             Text(
-              'SECURE ACCOUNT',
+              'Secure Account',
               style: AppTextStyles.heading.copyWith(
                 fontSize: 28,
                 color: const Color(0xFF0D4D3B),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'SF Pro Display',
               ),
             ),
-            const Text(
-              'STEP 3 OF 3 • NEW PASSWORD',
+            Text(
+              'Step 3 of 3 • New Password',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: Colors.grey,
                 letterSpacing: 1.1,
+                fontFamily: 'SF Pro Display',
               ),
             ),
             
@@ -51,7 +52,7 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
 
             // ── Password Field ────────────────────────────────
             _buildField(
-              label: 'NEW PASSWORD',
+              label: 'New Password',
               hint: 'New Password',
               icon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
@@ -90,11 +91,12 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'RESET PASSWORD',
+                      'Reset Password',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 1.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                     SizedBox(width: 8),
@@ -121,14 +123,15 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
                     color: Colors.grey.withValues(alpha: 0.6),
                     height: 1.5,
                     letterSpacing: 0.5,
+                    fontFamily: 'SF Pro Display',
                   ),
                   children: const [
                     TextSpan(
-                      text: 'SECURITY NOTE: ',
-                      style: TextStyle(color: Color(0xFF0D4D3B)),
+                      text: 'Security Note: ',
+                      style: TextStyle(color: Color(0xFF0D4D3B), fontFamily: 'SF Pro Display'),
                     ),
                     TextSpan(
-                      text: 'TAKE.HEALTH AI PLATFORM NEVER ASKS FOR YOUR PASSWORD OVER EMAIL. ALL PASSWORD RESETS ARE HANDLED THROUGH OUR SECURE VERIFICATION SYSTEM.',
+                      text: 'Take.health AI platform never asks for your password over email. All password resets are handled through our secure verification system.',
                     ),
                   ],
                 ),
@@ -155,10 +158,11 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
             color: Colors.grey,
             letterSpacing: 0.8,
+            fontFamily: 'SF Pro Display',
           ),
         ),
         const SizedBox(height: 8),

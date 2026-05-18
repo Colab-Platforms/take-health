@@ -137,53 +137,6 @@ class _SplashBody extends StatelessWidget {
   }
 }
 
-/// ── Video Background ──────────────────────────────────────────────────────
-///
-/// HOW TO USE YOUR OWN VIDEO:
-/// 1. Add your video file to `assets/videos/` (e.g. `background.mp4`).
-/// 2. Ensure `pubspec.yaml` lists `assets/videos/`.
-/// 3. Replace the body of this widget with a [VideoPlayer] as shown below:
-///
-/// ```dart
-/// class _VideoBackground extends StatefulWidget { ... }
-/// class _VideoBackgroundState extends State<_VideoBackground> {
-///   late VideoPlayerController _controller;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     _controller = VideoPlayerController.asset('assets/videos/background.mp4')
-///       ..initialize().then((_) {
-///           _controller.setLooping(true);
-///           _controller.setVolume(0);
-///           _controller.play();
-///           setState(() {});
-///         });
-///   }
-///
-///   @override
-///   void dispose() {
-///     _controller.dispose();
-///     super.dispose();
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return _controller.value.isInitialized
-///         ? SizedBox.expand(
-///             child: FittedBox(
-///               fit: BoxFit.cover,
-///               child: SizedBox(
-///                 width: _controller.value.size.width,
-///                 height: _controller.value.size.height,
-///                 child: VideoPlayer(_controller),
-///               ),
-///             ),
-///           )
-///         : const ColoredBox(color: Color(0xFF2D1561));
-///   }
-/// }
-/// ```
 class _VideoBackground extends StatelessWidget {
   const _VideoBackground();
 

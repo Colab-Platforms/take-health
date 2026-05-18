@@ -21,20 +21,22 @@ class ResetAccessPage extends StatelessWidget {
 
             // ── Title ─────────────────────────────────────────
             Text(
-              'RESET ACCESS',
+              'Reset Access',
               style: AppTextStyles.heading.copyWith(
-                fontSize: 26,
+                fontSize: 28,
                 color: const Color(0xFF0D4D3B),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'SF Pro Display',
               ),
             ),
             const Text(
-              'STEP 1 OF 3 • EMAIL',
+              'Step 1 of 3 • Email',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: Colors.grey,
                 letterSpacing: 1.1,
+                fontFamily: 'SF Pro Display',
               ),
             ),
             
@@ -42,7 +44,7 @@ class ResetAccessPage extends StatelessWidget {
 
             // ── Email Field ───────────────────────────────────
             _buildField(
-              label: 'EMAIL ADDRESS',
+              label: 'Email Address',
               hint: 'Email Address',
               icon: Icons.email_outlined,
               onChanged: (val) {},
@@ -66,11 +68,12 @@ class ResetAccessPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'SEND CODE',
+                      'Send Code',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                     SizedBox(width: 8),
@@ -97,14 +100,15 @@ class ResetAccessPage extends StatelessWidget {
                     color: Colors.grey.withValues(alpha: 0.6),
                     height: 1.5,
                     letterSpacing: 0.5,
+                    fontFamily: 'SF Pro Display',
                   ),
                   children: const [
                     TextSpan(
-                      text: 'SECURITY NOTE: ',
-                      style: TextStyle(color: Color(0xFF0D4D3B)),
+                      text: 'Security Note: ',
+                      style: TextStyle(color: Color(0xFF0D4D3B), fontFamily: 'SF Pro Display'),
                     ),
                     TextSpan(
-                      text: 'TAKE.HEALTH AI PLATFORM NEVER ASKS FOR YOUR PASSWORD OVER EMAIL. ALL PASSWORD RESETS ARE HANDLED THROUGH OUR SECURE VERIFICATION SYSTEM.',
+                      text: 'Take.health AI platform never asks for your password over email. All password resets are handled through our secure verification system.',
                     ),
                   ],
                 ),
@@ -129,10 +133,11 @@ class ResetAccessPage extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
             color: Colors.grey,
             letterSpacing: 0.8,
+            fontFamily: 'SF Pro Display',
           ),
         ),
         const SizedBox(height: 8),
@@ -143,7 +148,7 @@ class ResetAccessPage extends StatelessWidget {
             hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w500),
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             filled: true,
-            fillColor: const Color(0xFFF0F5F9),
+            //fillColor: const Color(0xFFF0F5F9),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),

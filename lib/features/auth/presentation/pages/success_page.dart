@@ -56,7 +56,7 @@ class SuccessPage extends StatelessWidget {
               'Your account\nwas successfully created!',
               textAlign: TextAlign.center,
               style: AppTextStyles.heading,
-            ),
+            ),  
             
             const SizedBox(height: 12),
             

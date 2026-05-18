@@ -44,22 +44,23 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               children: [
                 const SizedBox(height: 20),
                 
-                // ── Title ─────────────────────────────────────────
                 Text(
-                  'CREATE ACCOUNT',
+                  'Create Account',
                   style: AppTextStyles.heading.copyWith(
-                    fontSize: 25,
+                    fontSize: 28,
                     color: const Color(0xFF0D4D3B),
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'SF Pro Display',
                   ),
                 ),
                 Text(
-                  'START YOUR HEALTH JOURNEY',
+                  'Start your health journey',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Colors.grey.withValues(alpha: 0.6),
                     letterSpacing: 1.1,
+                    fontFamily: 'SF Pro Display',
                   ),
                 ),
                 
@@ -67,31 +68,31 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
                 // ── Form Fields ───────────────────────────────────
                 _buildField(
-                  label: 'FULL NAME *',
+                  label: 'Full Name *',
                   hint: 'Full Name',
                   icon: Icons.person_outline,
                   onChanged: (val) => context.read<AuthBloc>().add(AuthFullNameChanged(val)),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 
                 _buildField(
-                  label: 'EMAIL ADDRESS *',
+                  label: 'Email Address *',
                   hint: 'admin@fitcure.com',
                   icon: Icons.email_outlined,
                   onChanged: (val) => context.read<AuthBloc>().add(AuthEmailChanged(val)),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 
                 _buildField(
-                  label: 'PHONE NUMBER *',
+                  label: 'Phone Number *',
                   hint: 'Phone Number',
                   icon: Icons.phone_outlined,
                   onChanged: (val) => context.read<AuthBloc>().add(AuthPhoneNumberChanged(val)),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 
                 _buildField(
-                  label: 'PASSWORD *',
+                  label: 'Password *',
                   hint: '••••••••••••••',
                   icon: Icons.lock_outline,
                   obscureText: !_isPasswordVisible,
@@ -130,11 +131,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          'CONTINUE',
+                          'Continue',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 1.5,
+                            fontFamily: 'SF Pro Display',
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -151,23 +153,25 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   child: RichText(
                     text: TextSpan(
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.grey,
                         letterSpacing: 0.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                       children: [
-                        const TextSpan(text: 'ALREADY REGISTERED? '),
+                        const TextSpan(text: 'Already registered? '),
                         WidgetSpan(
                           child: GestureDetector(
                             onTap: () => context.push(AppRoutes.login),
                             child: const Text(
-                              'SIGN IN',
+                              'Sign In',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF0D4D3B),
                                 decoration: TextDecoration.underline,
+                                fontFamily: 'SF Pro Display',
                               ),
                             ),
                           ),
@@ -199,10 +203,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
             color: Colors.grey,
             letterSpacing: 0.8,
+            fontFamily: 'SF Pro Display',
           ),
         ),
         const SizedBox(height: 8),
@@ -211,11 +216,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(fontSize:15, color: Colors.black26, fontWeight: FontWeight.w300),
+            hintStyle: const TextStyle(fontSize:14, color: Colors.black26, fontWeight: FontWeight.w300),
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: const Color(0xFFF0F5F9), // Light blue-grey fill
+           // fillColor: const Color(0xFFF0F5F9), // Light blue-grey fill
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),

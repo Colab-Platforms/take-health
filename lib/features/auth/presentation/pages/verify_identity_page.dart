@@ -18,6 +18,7 @@ class VerifyIdentityPage extends StatelessWidget {
         fontSize: 24,
         fontWeight: FontWeight.w900,
         color: Color(0xFF0D4D3B),
+        fontFamily: 'SF Pro Display',
       ),
       decoration: BoxDecoration(
         color: const Color(0xFFF0F5F9),
@@ -41,21 +42,23 @@ class VerifyIdentityPage extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'VERIFY IDENTITY',
+                    'Verify Identity',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.heading.copyWith(
-                      fontSize: 26,
+                      fontSize: 28,
                       color: const Color(0xFF0D4D3B),
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'SF Pro Display',
                     ),
                   ),
-                  const Text(
-                    'STEP 2 OF 3 • CODE',
+                  Text(
+                    'Step 2 of 3 • Code',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.grey,
                       letterSpacing: 1.1,
+                      fontFamily: 'SF Pro Display',
                     ),
                   ),
                 ],
@@ -65,14 +68,15 @@ class VerifyIdentityPage extends StatelessWidget {
             const SizedBox(height: 48),
 
             // ── Verification Code ────────────────────────────
-            const Center(
+            Center(
               child: Text(
-                'VERIFICATION CODE',
+                'Verification Code',
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: Colors.grey,
                   letterSpacing: 0.8,
+                  fontFamily: 'SF Pro Display',
                 ),
               ),
             ),
@@ -100,12 +104,13 @@ class VerifyIdentityPage extends StatelessWidget {
                     letterSpacing: 0.5,
                   ),
                   children: [
-                    const TextSpan(text: "DIDN'T RECEIVE CODE? "),
+                    const TextSpan(text: "Didn't receive code? "),
                     TextSpan(
                       text: 'Resend Code',
                       style: TextStyle(
                         color: const Color(0xFF0D4D3B),
                         decoration: TextDecoration.underline,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                   ],
@@ -131,11 +136,12 @@ class VerifyIdentityPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'VERIFY CODE',
+                      'Verify Code',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                     SizedBox(width: 8),
@@ -162,14 +168,15 @@ class VerifyIdentityPage extends StatelessWidget {
                     color: Colors.grey.withValues(alpha: 0.6),
                     height: 1.5,
                     letterSpacing: 0.5,
+                    fontFamily: 'SF Pro Display',
                   ),
                   children: const [
                     TextSpan(
-                      text: 'SECURITY NOTE: ',
-                      style: TextStyle(color: Color(0xFF0D4D3B)),
+                      text: 'Security Note: ',
+                      style: TextStyle(color: Color(0xFF0D4D3B), fontFamily: 'SF Pro Display'),
                     ),
                     TextSpan(
-                      text: 'TAKE.HEALTH AI PLATFORM NEVER ASKS FOR YOUR PASSWORD OVER EMAIL. ALL PASSWORD RESETS ARE HANDLED THROUGH OUR SECURE VERIFICATION SYSTEM.',
+                      text: 'Take.health AI platform never asks for your password over email. All password resets are handled through our secure verification system.',
                     ),
                   ],
                 ),

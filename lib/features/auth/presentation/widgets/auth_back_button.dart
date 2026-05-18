@@ -22,7 +22,7 @@ class AuthBackButton extends StatelessWidget {
           Icon(Icons.arrow_back, size: 16, color: Color(0xFF0D4D3B)),
           SizedBox(width: 8),
           Text(
-            'BACK',
+            'Back',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,

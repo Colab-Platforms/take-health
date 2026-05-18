@@ -26,40 +26,41 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 60),
-            
-            // ── Title ─────────────────────────────────────────
+
             Text(
               'Welcome Back',
               style: AppTextStyles.heading.copyWith(
-                fontSize: 26,
+                fontSize: 28,
                 color: const Color(0xFF0D4D3B),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'SF Pro Display',
               ),
             ),
-            const Text(
-              'LOGIN TO YOUR ACCOUNT',
+            Text(
+              'Login to your account',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: Colors.grey,
                 letterSpacing: 1.1,
+                fontFamily: 'SF Pro Display',
               ),
             ),
-            
+
             const SizedBox(height: 30),
 
             // ── Email Field ───────────────────────────────────
             _buildField(
-              label: 'EMAIL ADDRESS',
+              label: 'Email Address',
               hint: 'admin@fitcure.com',
               icon: Icons.email_outlined,
               onChanged: (val) {},
             ),
             const SizedBox(height: 15),
-            
+
             // ── Password Field ────────────────────────────────
             _buildField(
-              label: 'PASSWORD',
+              label: 'Password',
               hint: '••••••••••••••',
               icon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
@@ -73,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               onChanged: (val) {},
             ),
-            
+
             const SizedBox(height: 12),
 
             // ── Remember Me & Forgot Password ────────────────
@@ -90,25 +91,27 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'REMEMBER ME',
+                Text(
+                  'Remember Me',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey,
                     letterSpacing: 0.5,
+                    fontFamily: 'SF Pro Display',
                   ),
                 ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => context.push(AppRoutes.resetAccess),
-                  child: const Text(
-                    'FORGOT PASSWORD?',
+                  child: Text(
+                    'Forgot Password?',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey,
                       letterSpacing: 0.5,
+                      fontFamily: 'SF Pro Display',
                     ),
                   ),
                 ),
@@ -133,11 +136,12 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'SIGN IN',
+                      'Sign In',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                     SizedBox(width: 8),
@@ -146,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 40),
 
             // ── Create Account Link ──────────────────────────
@@ -155,13 +159,14 @@ class _LoginPageState extends State<LoginPage> {
                 onTap: () => context.push(AppRoutes.createAccount),
                 child: Column(
                   children: [
-                    const Text(
-                      'CREATE ACCOUNT',
+                    Text(
+                      'Create Account',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF0D4D3B),
                         letterSpacing: 0.5,
+                        fontFamily: 'SF Pro Display',
                       ),
                     ),
                     Container(
@@ -194,10 +199,11 @@ class _LoginPageState extends State<LoginPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
             color: Colors.grey,
             letterSpacing: 0.8,
+            fontFamily: 'SF Pro Display',
           ),
         ),
         const SizedBox(height: 5),
@@ -207,11 +213,11 @@ class _LoginPageState extends State<LoginPage> {
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w500),
+            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w300,fontSize: 14),
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: const Color(0xFFF0F5F9),
+           // fillColor: const Color(0xFFF0F5F9),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),

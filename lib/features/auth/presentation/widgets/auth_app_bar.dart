@@ -49,10 +49,10 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const Icon(Icons.change_history_rounded, color: Color(0xFF0D4D3B), size: 28),
                   const SizedBox(width: 8),
                   const Text(
-                    'TAKE HEALTH',
+                    'Take Health',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                       color: Color(0xFF0D4D3B),
                       letterSpacing: 1.2,
                     ),
