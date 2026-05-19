@@ -25,7 +25,7 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () => context.pop(),
                   child: const Row(
                     children: [
-                      Icon(Icons.arrow_back, size: 28, color: Color(0xFF0D4D3B)),
+                      Icon(Icons.arrow_back, size: 28, color: Colors.grey),
                       SizedBox(width: 8),
                       // Text(
                       //   'BACK',
@@ -46,7 +46,7 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.change_history_rounded, color: Color(0xFF0D4D3B), size: 28),
+                  //const Icon(Icons.change_history_rounded, color: Color(0xFF0D4D3B), size: 28),
                   const SizedBox(width: 8),
                   const Text(
                     'Take Health',

@@ -85,7 +85,7 @@ class AppTextStyles {
   );
 
   static const TextStyle splashSubtitle = TextStyle(
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: Color(0xCCFFFFFF),
     height: 1.5,

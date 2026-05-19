@@ -46,7 +46,7 @@ class VerifyIdentityPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AppTextStyles.heading.copyWith(
                       fontSize: 28,
-                      color: const Color(0xFF0D4D3B),
+                      color: Colors.black,
                       fontWeight: FontWeight.w800,
                       fontFamily: 'SF Pro Display',
                     ),
@@ -74,7 +74,7 @@ class VerifyIdentityPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Colors.grey,
+                  color: Color(0xFF121A2C),
                   letterSpacing: 0.8,
                   fontFamily: 'SF Pro Display',
                 ),

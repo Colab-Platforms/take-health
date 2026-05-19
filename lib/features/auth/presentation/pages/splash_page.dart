@@ -120,7 +120,6 @@ class _SplashBody extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppColors.white,
-                          decoration: TextDecoration.underline,
                           decorationColor: AppColors.white,
                         ),
                       ),

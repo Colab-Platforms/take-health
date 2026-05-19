@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +34,7 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
               'Secure Account',
               style: AppTextStyles.heading.copyWith(
                 fontSize: 28,
-                color: const Color(0xFF0D4D3B),
+                color:Colors.black,
                 fontWeight: FontWeight.w800,
                 fontFamily: 'SF Pro Display',
               ),
@@ -48,7 +50,7 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
               ),
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             // ── Password Field ────────────────────────────────
             _buildField(
@@ -71,7 +73,7 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
             if (_password.isNotEmpty)
               PasswordValidationChecker(password: _password),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
             // ── Reset Password Button ────────────────────────
             SizedBox(
@@ -80,6 +82,8 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0D4D3B),
+                  disabledBackgroundColor: const Color(0xFF0D4D3B),
+                  disabledForegroundColor: Colors.white.withOpacity(0.6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -160,7 +164,7 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: Colors.grey,
+            color:  Color(0xFF121A2C),
             letterSpacing: 0.8,
             fontFamily: 'SF Pro Display',
           ),
@@ -171,11 +175,11 @@ class _SecureAccountPageState extends State<SecureAccountPage> {
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w500),
+            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w300,fontSize: 14),
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: const Color(0xFFF0F5F9),
+            fillColor:Colors.grey.shade50,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),

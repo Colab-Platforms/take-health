@@ -24,7 +24,7 @@ class ResetAccessPage extends StatelessWidget {
               'Reset Access',
               style: AppTextStyles.heading.copyWith(
                 fontSize: 28,
-                color: const Color(0xFF0D4D3B),
+                color: Colors.black,
                 fontWeight: FontWeight.w800,
                 fontFamily: 'SF Pro Display',
               ),
@@ -135,7 +135,7 @@ class ResetAccessPage extends StatelessWidget {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: Colors.grey,
+            color: Colors.black,
             letterSpacing: 0.8,
             fontFamily: 'SF Pro Display',
           ),

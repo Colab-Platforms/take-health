@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
               'Welcome Back',
               style: AppTextStyles.heading.copyWith(
                 fontSize: 28,
-                color: const Color(0xFF0D4D3B),
+                color: Colors.black,
                 fontWeight: FontWeight.w800,
                 fontFamily: 'SF Pro Display',
               ),
@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey,
+                      color: Colors.black,
                       letterSpacing: 0.5,
                       fontFamily: 'SF Pro Display',
                     ),
@@ -169,11 +169,6 @@ class _LoginPageState extends State<LoginPage> {
                         fontFamily: 'SF Pro Display',
                       ),
                     ),
-                    Container(
-                      height: 1,
-                      width: 120,
-                      color: const Color(0xFF0D4D3B),
-                    ),
                   ],
                 ),
               ),
@@ -201,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: Colors.grey,
+            color: Colors.black,
             letterSpacing: 0.8,
             fontFamily: 'SF Pro Display',
           ),

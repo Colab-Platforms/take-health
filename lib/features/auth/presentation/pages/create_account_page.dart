@@ -169,8 +169,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0D4D3B),
-                                decoration: TextDecoration.underline,
+                                color: Color(0xFF0D2020),
                                 fontFamily: 'SF Pro Display',
                               ),
                             ),
@@ -205,7 +204,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: Colors.grey,
+            color:  Color(0xFF0D2020),
             letterSpacing: 0.8,
             fontFamily: 'SF Pro Display',
           ),
