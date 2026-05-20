@@ -27,7 +27,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         listener: (context, state) {
           if (state.status == AuthStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Account created successfully!')),
+              const SnackBar(backgroundColor:  Color(0xFF0D4D3B),
+                  content: Text('Account created successfully!')),
             );
           }
           if (state.status == AuthStatus.failure) {
@@ -48,7 +49,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   'Create Account',
                   style: AppTextStyles.heading.copyWith(
                     fontSize: 28,
-                    color: const Color(0xFF0D4D3B),
+                    color: Colors.black,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'SF Pro Display',
                   ),
@@ -120,6 +121,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0D4D3B), // Dark green from Image 1
+                      disabledBackgroundColor: const Color(0xFF0D4D3B),
+                      disabledForegroundColor: Colors.white.withOpacity(0.6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

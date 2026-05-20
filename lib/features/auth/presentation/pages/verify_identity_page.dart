@@ -69,15 +69,20 @@ class VerifyIdentityPage extends StatelessWidget {
 
             // ── Verification Code ────────────────────────────
             Center(
-              child: Text(
-                'Verification Code',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF121A2C),
-                  letterSpacing: 0.8,
-                  fontFamily: 'SF Pro Display',
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    'Verification Code',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF121A2C),
+                      letterSpacing: 0.8,
+                      fontFamily: 'SF Pro Display',
+                    ),
+                  ),
+                  Text("data")
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -106,10 +111,9 @@ class VerifyIdentityPage extends StatelessWidget {
                   children: [
                     const TextSpan(text: "Didn't receive code? "),
                     TextSpan(
-                      text: 'Resend Code',
+                      text: 'Resend code in 30s',
                       style: TextStyle(
                         color: const Color(0xFF0D4D3B),
-                        decoration: TextDecoration.underline,
                         fontFamily: 'SF Pro Display',
                       ),
                     ),
@@ -153,36 +157,7 @@ class VerifyIdentityPage extends StatelessWidget {
             
             const SizedBox(height: 60),
 
-            // ── Security Note ───────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F5F9).withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.grey.withValues(alpha: 0.6),
-                    height: 1.5,
-                    letterSpacing: 0.5,
-                    fontFamily: 'SF Pro Display',
-                  ),
-                  children: const [
-                    TextSpan(
-                      text: 'Security Note: ',
-                      style: TextStyle(color: Color(0xFF0D4D3B), fontFamily: 'SF Pro Display'),
-                    ),
-                    TextSpan(
-                      text: 'Take.health AI platform never asks for your password over email. All password resets are handled through our secure verification system.',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
+
           ],
         ),
       ),

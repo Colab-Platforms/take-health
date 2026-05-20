@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
 
-            const SizedBox(height: 8),
+             const SizedBox(height: 15),
 
             // ── Sign In Button ───────────────────────────────
             SizedBox(
@@ -151,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 35),
 
             // ── Create Account Link ──────────────────────────
             Center(

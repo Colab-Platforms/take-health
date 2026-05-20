@@ -5,7 +5,7 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AuthAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(80); // Increased height to accommodate the branding
+  Size get preferredSize => const Size.fromHeight(100);
 
   @override
   Widget build(BuildContext context) {
@@ -14,56 +14,29 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
-      title: Column(
-        children: [
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              // ── Back Button ──────────────────────────────────
-              if (context.canPop())
-                GestureDetector(
+      leadingWidth: 80,
+      leading: context.canPop()
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 24.0),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => context.pop(),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.arrow_back, size: 28, color: Colors.grey),
-                      SizedBox(width: 8),
-                      // Text(
-                      //   'BACK',
-                      //   style: TextStyle(
-                      //     fontSize: 12,
-                      //     fontWeight: FontWeight.w900,
-                      //     color: Color(0xFF0D4D3B),
-                      //     letterSpacing: 0.5,
-                      //   ),
-                      // ),
-                    ],
+                  child: const Icon(
+                    Icons.arrow_back,
+                    size: 28,
+                    color: Colors.grey,
                   ),
                 ),
-              
-              const Spacer(),
-              
-              // ── Logo branding ──────────────────────────────
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  //const Icon(Icons.change_history_rounded, color: Color(0xFF0D4D3B), size: 28),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Take Health',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0D4D3B),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
               ),
-              
-              const Spacer(flex: 2), // Offset to center branding roughly or keep it right-aligned as per user preference
-            ],
-          ),
-        ],
+            )
+          : null,
+      centerTitle: true,
+      title: Image.asset(
+        'assets/images/logo.png',
+        height: 100,
+        fit: BoxFit.contain,
       ),
     );
   }

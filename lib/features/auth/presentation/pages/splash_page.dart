@@ -5,11 +5,6 @@ import 'package:classroom_app/core/theme/app_theme.dart';
 
 import '../../../../core/routes/app_routes.dart';
 
-/// Screen 1 — Welcome / Splash
-///
-/// The purple overlay and gradient are designed to sit on top of a
-/// [VideoPlayer] widget. Swap the [_VideoBackground] placeholder for your
-/// actual video once the asset is ready (see comment inside the widget).
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 
@@ -41,9 +36,9 @@ class _SplashBody extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.primaryDark.withOpacity(0.55),
-                AppColors.primaryDark.withOpacity(0.75),
-                AppColors.primaryDark.withOpacity(0.92),
+                const Color(0xFF0D4D3B).withOpacity(0.55),
+                const Color(0xFF0D4D3B).withOpacity(0.75),
+                const Color(0xFF0D4D3B).withOpacity(0.92),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -63,12 +58,12 @@ class _SplashBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome to Classroom',
+                      'Welcome to take health',
                       style: AppTextStyles.splashTitle,
                     ),
                     SizedBox(height: 10),
                     Text(
-                      'Join over 10,000 learners over the World and\nenjoy online education!',
+                      'Get personalized healthcare support powered by take health with AI',
                       style: AppTextStyles.splashSubtitle,
                     ),
                   ],
@@ -141,17 +136,17 @@ class _VideoBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Placeholder: purple gradient that mimics the video mood ──
+    // ── Placeholder: green gradient that mimics the video mood ──
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF1A0A35),
-            Color(0xFF3B1A7A),
-            Color(0xFF5B2DA8),
-            Color(0xFF3B1A7A),
+            Color(0xFF051D16),
+            Color(0xFF082E23),
+            Color(0xFF0D4D3B),
+            Color(0xFF082E23),
           ],
           stops: [0.0, 0.35, 0.65, 1.0],
         ),
@@ -169,7 +164,7 @@ class _VideoBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF8B5CF6).withOpacity(0.35),
+                    const Color(0xFF166952).withOpacity(0.35), // Beautiful green glow
                     Colors.transparent,
                   ],
                 ),
@@ -186,21 +181,14 @@ class _VideoBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF6C3FD1).withOpacity(0.28),
+                    const Color(0xFF0D4D3B).withOpacity(0.28), // Beautiful green glow
                     Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-          // Center icon hint
-          Center(
-            child: Icon(
-              Icons.headphones_rounded,
-              size: 140,
-              color: Colors.white.withOpacity(0.07),
-            ),
-          ),
+
         ],
       ),
     );
