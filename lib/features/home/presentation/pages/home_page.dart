@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:classroom_app/features/home/presentation/widgets/today_diet_container.dart';
 
+import '../../../nutrition/presentation/widgets/care_plan_widget.dart';
+import '../../../nutrition/presentation/widgets/logged_meals_widget.dart';
+import '../../../reports/presentation/widgets/lab_insights_widget.dart';
+
 class HomePage extends StatelessWidget {
   final VoidCallback? onViewFullPlan;
-  const HomePage({super.key, this.onViewFullPlan});
+  final VoidCallback? onUploadReport;
+  final VoidCallback? onNutrition;
+
+  const HomePage({
+    super.key,
+    this.onViewFullPlan,
+    this.onUploadReport, this.onNutrition,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.green.shade50,
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor:  Colors.green.shade50,
+        backgroundColor: Colors.green.shade50,
         elevation: 0,
         leadingWidth: 75,
-
         leading: const Padding(
-          padding: EdgeInsets.only(left: 18,top: 5,bottom: 5),
+          padding: EdgeInsets.only(left: 18, top: 5, bottom: 5),
           child: CircleAvatar(
             backgroundImage: NetworkImage(
               'https://i.pravatar.cc/300',
             ),
           ),
         ),
-
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
             Text(
               "Hello Yoro!",
               style: TextStyle(
@@ -38,9 +45,7 @@ class HomePage extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-
             SizedBox(height: 2),
-
             Text(
               "Good afternoon",
               style: TextStyle(
@@ -51,9 +56,7 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-
         actions: [
-
           Padding(
             padding: const EdgeInsets.only(right: 18),
             child: Container(
@@ -69,7 +72,6 @@ class HomePage extends StatelessWidget {
                   ),
                 ],
               ),
-
               child: const Icon(
                 Icons.notifications_none_rounded,
                 color: Color(0xff5D8B74),
@@ -79,26 +81,20 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
-
         child: Column(
           children: [
-
             /// SEARCH BAR
             Container(
               height: 45,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(35),
               ),
-
               child: Row(
                 children: [
-
                   Container(
                     height: 32,
                     width: 32,
@@ -106,16 +102,13 @@ class HomePage extends StatelessWidget {
                       color: Color(0xff5D8B74),
                       shape: BoxShape.circle,
                     ),
-
                     child: const Icon(
                       Icons.smart_toy_outlined,
                       color: Colors.white,
                       size: 20,
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
                   const Expanded(
                     child: Text(
                       "What should I eat for dinner?",
@@ -126,7 +119,6 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const Icon(
                     Icons.auto_awesome,
                     color: Color(0xff5D8B74),
@@ -143,7 +135,6 @@ class HomePage extends StatelessWidget {
               height: 185,
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 image: const DecorationImage(
@@ -153,18 +144,13 @@ class HomePage extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-
               child: Padding(
                 padding: const EdgeInsets.all(16),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
-
                     Row(
                       children: [
-
                         Container(
                           height: 48,
                           width: 48,
@@ -174,66 +160,50 @@ class HomePage extends StatelessWidget {
                             ),
                             shape: BoxShape.circle,
                           ),
-
                           child: const Icon(
                             Icons.health_and_safety_outlined,
                             color: Colors.white,
                             size: 22,
                           ),
                         ),
-
                         const SizedBox(width: 12),
-
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-
                               Row(
                                 children: [
-
                                   const Expanded(
                                     child: Text(
                                       "Optimize Your Health",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
-                                        fontWeight:
-                                        FontWeight.bold,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-
                                   Container(
-                                    padding:
-                                    const EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 3,
                                     ),
-
                                     decoration: BoxDecoration(
                                       color: Colors.white24,
-                                      borderRadius:
-                                      BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-
                                     child: const Text(
                                       "NEW",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
-                                        fontWeight:
-                                        FontWeight.bold,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-
                               const SizedBox(height: 6),
-
                               const Text(
                                 "Add details and lab reports to unlock wellness insights.",
                                 style: TextStyle(
@@ -247,82 +217,62 @@ class HomePage extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 18),
-
                     Row(
                       children: [
-
                         Expanded(
                           child: Container(
                             height: 40,
-
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: Colors.white24,
                               ),
-                              borderRadius:
-                              BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14),
                             ),
-
                             child: const Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.center,
-
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-
-                                SizedBox(width: 5),
-
                                 Text(
                                   "Complete profile",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
-                                    fontWeight:
-                                    FontWeight.bold,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 10),
-
                         Expanded(
-                          child: Container(
-                            height: 40,
-
-                            decoration: BoxDecoration(
-                              color: const Color(0xff6BAF92),
-                              borderRadius:
-                              BorderRadius.circular(14),
-                            ),
-
-                            child: const Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.center,
-
-                              children: [
-
-                                Icon(
-                                  Icons.upload_outlined,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-
-                                SizedBox(width: 5),
-
-                                Text(
-                                  "Upload report",
-                                  style: TextStyle(
+                          child: GestureDetector(
+                            onTap: onUploadReport,
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xff6BAF92),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.upload_outlined,
                                     color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight:
-                                    FontWeight.bold ,
+                                    size: 16,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(width: 5),
+                                  Text(
+                                    "Upload report",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -339,19 +289,16 @@ class HomePage extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
-
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(22),
-                border: BoxBorder.all(color: Colors.grey.shade300)
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                ),
               ),
-
               child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const Text(
                     "Calories",
                     style: TextStyle(
@@ -359,9 +306,7 @@ class HomePage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 2),
-
                   const Text(
                     "DAILY TRACKING",
                     style: TextStyle(
@@ -371,13 +316,10 @@ class HomePage extends StatelessWidget {
                       letterSpacing: 1,
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   const Center(
                     child: Column(
                       children: [
-
                         Text(
                           "0",
                           style: TextStyle(
@@ -385,9 +327,7 @@ class HomePage extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         SizedBox(height: 2),
-
                         Text(
                           "OF 3335",
                           style: TextStyle(
@@ -399,181 +339,65 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 18),
-
-                  /// DETAILS CONTAINER
                   Container(
                     padding: const EdgeInsets.symmetric(
                       vertical: 12,
                       horizontal: 10,
                     ),
-
                     decoration: BoxDecoration(
                       color: const Color(0xffFBF8F2),
-                      borderRadius:
-                      BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-
                     child: const Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-
-                        /// PROTEIN
-                        Row(
-                          children: [
-
-                            Icon(
-                              Icons.water_drop_outlined,
-                              color: Colors.redAccent,
-                              size: 16,
-                            ),
-
-                            SizedBox(width: 6),
-
-                            Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-
-                                Text(
-                                  "18g",
-                                  style: TextStyle(
-                                    fontWeight:
-                                    FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-
-                                Text(
-                                  "PROTEIN",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 7,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        NutrientItem(
+                          icon: Icons.water_drop_outlined,
+                          iconColor: Colors.redAccent,
+                          value: "18g",
+                          label: "PROTEIN",
                         ),
-
-                        /// CARBS
-                        Row(
-                          children: [
-
-                            Icon(
-                              Icons.favorite_border,
-                              color: Colors.blue,
-                              size: 16,
-                            ),
-
-                            SizedBox(width: 6),
-
-                            Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-
-                                Text(
-                                  "68g",
-                                  style: TextStyle(
-                                    fontWeight:
-                                    FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-
-                                Text(
-                                  "CARBS",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 7,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        NutrientItem(
+                          icon: Icons.favorite_border,
+                          iconColor: Colors.blue,
+                          value: "68g",
+                          label: "CARBS",
                         ),
-
-                        /// FATS
-                        Row(
-                          children: [
-
-                            Icon(
-                              Icons.sentiment_satisfied_alt,
-                              color: Colors.green,
-                              size: 16,
-                            ),
-
-                            SizedBox(width: 6),
-
-                            Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-
-                                Text(
-                                  "9g",
-                                  style: TextStyle(
-                                    fontWeight:
-                                    FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-
-                                Text(
-                                  "FATS",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 7,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        NutrientItem(
+                          icon: Icons.sentiment_satisfied_alt,
+                          iconColor: Colors.green,
+                          value: "9g",
+                          label: "FATS",
                         ),
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   const Divider(height: 1),
-
                   const SizedBox(height: 10),
-
                   const Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
-
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-
                       Text(
                         "Nutrient Info",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black
+                          color: Colors.black,
                         ),
                       ),
-
                       Row(
                         children: [
-
                           Text(
                             "View Details",
                             style: TextStyle(
                               color: Color(0xff5D8B74),
-                              fontWeight:
-                              FontWeight.w400,
+                              fontWeight: FontWeight.w400,
                               fontSize: 14,
                             ),
                           ),
-
                           SizedBox(width: 2),
-
                           Icon(
                             Icons.arrow_forward_ios,
                             size: 10,
@@ -589,16 +413,102 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            /// TODAY'S DIET CONTAINER
             TodayDietContainer(
               onViewFullPlan: onViewFullPlan ?? () {},
             ),
 
-            // Extra bottom padding for FAB clearance
+            const SizedBox(height: 16),
+
+            LabInsightsWidget(
+              onUploadReport: onUploadReport,
+            ),
+
+            const SizedBox(height: 16),
+            LoggedMealsWidget(onLogMeal: onNutrition),
+
+            const SizedBox(height: 16),
+
+            const CarePlanWidget(),
+
             const SizedBox(height: 80),
           ],
         ),
       ),
+    );
+  }
+}
+Widget buildTask(String title) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Row(
+      children: [
+        Container(
+          height: 28,
+          width: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.grey.shade400,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class NutrientItem extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String value;
+  final String label;
+
+  const NutrientItem({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: iconColor,
+          size: 16,
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 7,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

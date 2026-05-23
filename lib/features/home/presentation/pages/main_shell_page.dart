@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:classroom_app/features/home/presentation/pages/home_page.dart';
-import 'package:classroom_app/features/home/presentation/pages/nutrition_page.dart';
-import 'package:classroom_app/features/home/presentation/pages/reports_page.dart';
+import 'package:classroom_app/features/nutrition/presentation/pages/nutrition_page.dart';
+import 'package:classroom_app/features/reports/presentation/pages/reports_page.dart';
 
 import '../../../diet_plan/presentation/pages/diet_plan_page.dart';
 
@@ -31,7 +31,7 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomePage(onViewFullPlan: () => _onTabSelected(3)),
+      HomePage(onViewFullPlan: () => _onTabSelected(3), onUploadReport: () => _onTabSelected(2),onNutrition: () => _onTabSelected(1),),
       const NutritionPage(),
       const ReportsPage(),
       const DietPlanPage(),

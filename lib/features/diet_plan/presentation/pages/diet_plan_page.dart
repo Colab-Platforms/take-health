@@ -1,5 +1,4 @@
 // lib/features/diet_plan/presentation/pages/diet_plan_page.dart
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/model/meal_card_model.dart';
@@ -7,6 +6,8 @@ import '../../data/model/meal_option_model.dart';
 import '../widgets/action_clip.dart';
 import '../widgets/meal_card_widget.dart';
 import '../widgets/meal_options_popup.dart';
+import '../../../reports/presentation/widgets/lab_insights_widget.dart';
+import '../widgets/plan_history_dialog.dart';
 import '../widgets/preference_dialog.dart';
 import 'meal_options_sheet.dart';
 import 'regenerate_plan_sheet.dart';
@@ -102,6 +103,8 @@ class _DietPlanPageState extends State<DietPlanPage> {
     ),
   ];
 
+  // ── Dialogs ───────────────────────────────────────────────────────────────
+
   void _showMealOptions(MealCard meal) {
     showGeneralDialog(
       context: context,
@@ -115,10 +118,7 @@ class _DietPlanPageState extends State<DietPlanPage> {
           opacity: animation,
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.9, end: 1).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-              ),
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
             ),
             child: Center(
               child: Material(
@@ -135,6 +135,28 @@ class _DietPlanPageState extends State<DietPlanPage> {
                 ),
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showHistoryDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Dismiss",
+      barrierColor: Colors.black.withOpacity(0.35),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (_, __, ___) => const SizedBox(),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            ),
+            child: const PlanHistoryDialog(),
           ),
         );
       },
@@ -197,6 +219,8 @@ class _DietPlanPageState extends State<DietPlanPage> {
       },
     );
   }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +292,7 @@ class _DietPlanPageState extends State<DietPlanPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 ActionButtons(
-                  onHistoryTap: () {},
+                  onHistoryTap: _showHistoryDialog,       // ← wired up
                   onPreferenceTap: _showPreferenceDialog,
                   onRegenerateTap: _showRegenerateDialog,
                 ),
