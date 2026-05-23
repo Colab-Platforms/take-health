@@ -18,6 +18,17 @@ class AppColors {
   static const Color buttonDisabled = Color(0xFFBFAEE8);
 }
 
+class DietColors {
+  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color bgColor = Color(0xFFF2F2F0);
+  static const Color orangeAccent = Color(0xFFE65100);
+  static const Color textPrimary = Color(0xFF1A1A1A);
+  static const Color textSecondary = Color(0xFF9E9E9E);
+  static const Color cardGreen = Color(0xff6EA88B);
+  static const Color inputBg = Color(0xffF5F5F5);
+  static const Color greyText = Color(0xff667085);
+  static const Color appBarGreen = Color(0xff5D8B74);
+}
 class AppTextStyles {
   static const TextStyle heading = TextStyle(
     fontSize: 22,
