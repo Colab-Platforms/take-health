@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/core/routes/app_routes.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../widgets/auth_app_bar.dart';
 
 class LoginPage extends StatefulWidget {
@@ -14,6 +16,102 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
+  bool _isLoading = false;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  Future<void> _login() async {
+    // Validate inputs
+    if (_emailController.text.isEmpty && _phoneController.text.isEmpty) {
+      _showErrorSnackBar('Please enter email or phone number');
+      return;
+    }
+
+    if (_passwordController.text.isEmpty) {
+      _showErrorSnackBar('Please enter password');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://ai-healthcare-ip89.onrender.com/api/auth/login'),
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': _emailController.text,
+          'phone': _phoneController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Login successful
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 1),
+            ),
+          );
+
+          // Navigate to HomePage
+          context.go(AppRoutes.homePage);
+        }
+      } else {
+        // Login failed
+        String errorMessage = 'Login failed. Please try again.';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['message'] ?? errorMessage;
+        } catch (e) {
+          // If response body is not JSON, use status code message
+          errorMessage = 'Error: ${response.statusCode}';
+        }
+
+        if (mounted) {
+          _showErrorSnackBar(errorMessage);
+        }
+      }
+    } catch (e) {
+      // Network or other errors
+      if (mounted) {
+        _showErrorSnackBar('Network error: Unable to connect to server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +152,17 @@ class _LoginPageState extends State<LoginPage> {
               label: 'Email Address',
               hint: 'admin@fitcure.com',
               icon: Icons.email_outlined,
+              controller: _emailController,
+              onChanged: (val) {},
+            ),
+            const SizedBox(height: 15),
+
+            // ── Phone Field ───────────────────────────────────
+            _buildField(
+              label: 'Phone Number',
+              hint: '9876543210',
+              icon: Icons.phone_outlined,
+              controller: _phoneController,
               onChanged: (val) {},
             ),
             const SizedBox(height: 15),
@@ -64,6 +173,7 @@ class _LoginPageState extends State<LoginPage> {
               hint: '••••••••••••••',
               icon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
+              controller: _passwordController,
               suffixIcon: IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off_outlined,
@@ -118,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
 
-             const SizedBox(height: 15),
+            const SizedBox(height: 15),
 
             // ── Sign In Button ───────────────────────────────
             SizedBox(
@@ -131,10 +241,17 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  context.push(AppRoutes.homePage);
-                },
-                child: const Row(
+                onPressed: _isLoading ? null : _login,
+                child: _isLoading
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                    : const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
@@ -166,7 +283,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF0D4D3B),
+                        color: const Color(0xFF0D4D3B),
                         letterSpacing: 0.5,
                         fontFamily: 'SF Pro Display',
                       ),
@@ -189,6 +306,7 @@ class _LoginPageState extends State<LoginPage> {
     bool obscureText = false,
     Widget? suffixIcon,
     required Function(String) onChanged,
+    required TextEditingController controller,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,16 +323,16 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 5),
         TextFormField(
+          controller: controller,
           obscureText: obscureText,
           onChanged: onChanged,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w300,fontSize: 14),
+            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w300, fontSize: 14),
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
-           // fillColor: const Color(0xFFF0F5F9),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),

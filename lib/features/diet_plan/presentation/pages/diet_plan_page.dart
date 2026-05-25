@@ -224,110 +224,55 @@ class _DietPlanPageState extends State<DietPlanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: DietColors.bgColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.green.shade50,
-        elevation: 0,
-        leadingWidth: 75,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 18, top: 5, bottom: 5),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
-          ),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        Column(
           children: [
-            Text(
-              "Hello Yoro!",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              "Good afternoon",
-              style: TextStyle(
-                color: DietColors.appBarGreen,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                children: [
+                  ActionButtons(
+                    onHistoryTap: _showHistoryDialog,       // ← wired up
+                    onPreferenceTap: _showPreferenceDialog,
+                    onRegenerateTap: _showRegenerateDialog,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      "Today's Plan",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: DietColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  ..._meals.map((meal) => MealCardWidget(
+                    meal: meal,
+                    onTap: () => _showMealOptions(meal),
+                  )),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 18),
-            child: Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.notifications_none_rounded,
-                color: DietColors.appBarGreen,
-                size: 22,
-              ),
-            ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton(
+            heroTag: 'chat_diet',
+            mini: true,
+            backgroundColor: Colors.white,
+            foregroundColor: DietColors.primaryGreen,
+            elevation: 4,
+            onPressed: () {},
+            child: const Icon(Icons.chat_bubble_outline, size: 20),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: [
-                ActionButtons(
-                  onHistoryTap: _showHistoryDialog,       // ← wired up
-                  onPreferenceTap: _showPreferenceDialog,
-                  onRegenerateTap: _showRegenerateDialog,
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    "Today's Plan",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: DietColors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                ..._meals.map((meal) => MealCardWidget(
-                  meal: meal,
-                  onTap: () => _showMealOptions(meal),
-                )),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'chat',
-        mini: true,
-        backgroundColor: Colors.white,
-        foregroundColor: DietColors.primaryGreen,
-        elevation: 4,
-        onPressed: () {},
-        child: const Icon(Icons.chat_bubble_outline, size: 20),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        ),
+      ],
     );
   }
 }

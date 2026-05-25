@@ -1,4 +1,5 @@
 import 'package:classroom_app/features/home/presentation/pages/main_shell_page.dart';
+import 'package:classroom_app/features/profile/presentation/pages/profile_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/features/auth/presentation/pages/splash_page.dart';
 import 'package:classroom_app/features/auth/presentation/pages/create_account_page.dart';
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String verifyIdentity = '/verify-identity';
   static const String secureAccount = '/secure-account';
   static const String homePage = '/home-page';
+  static const String profile = '/profile';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -53,6 +55,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: AppRoutes.homePage,
       name: 'homePage',
       builder: (context,state)=> const MainShellPage(),
-    )
+    ),
+    GoRoute(
+      path: AppRoutes.profile,
+      name: 'profile',
+      builder: (context, state) => const ProfilePage(),
+    ),
   ],
 );

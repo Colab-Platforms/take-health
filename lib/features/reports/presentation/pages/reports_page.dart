@@ -3,135 +3,73 @@ import 'package:flutter/material.dart';
 class ReportsPage extends StatelessWidget {
   const ReportsPage({super.key});
 
-  static const Color _primaryGreen = Color(0xFF2E7D32);
   static const Color _cardGreen = Color(0xFF4A7C6F);
-  static const Color _bgColor = Color(0xFFF2F2F0);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.green.shade50,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.green.shade50,
-        elevation: 0,
-        leadingWidth: 75,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 18, top: 5, bottom: 5),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
-          ),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           children: [
-            Text(
-              "Hello Yoro!",
+            // ── Smart Lab Insights header ──────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFDDDDDD), width: 1),
+                  ),
+                  child: const Icon(
+                    Icons.monitor_heart_outlined,
+                    size: 18,
+                    color: _cardGreen,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Smart Lab Insights',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Upload your medical reports and let our AI translate complex jargon into actionable health insights and visualize your progress over time.',
               style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 13,
+                color: Color(0xFF555555),
+                height: 1.5,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
-              "Good afternoon",
-              style: TextStyle(
-                color: Color(0xff5D8B74),
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
+            const SizedBox(height: 20),
+
+            // ── Upload Lab Report card ─────────────────────────────────────
+            _buildUploadCard(context),
+            const SizedBox(height: 16),
+
+            // ── Comparative Analytics card ─────────────────────────────────
+            _buildComparativeCard(),
+            const SizedBox(height: 16),
+
+            // ── Recent Archives card ───────────────────────────────────────
+            _buildRecentArchivesCard(),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 18),
-            child: Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xff5D8B74),
-                size: 22,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        children: [
-          // ── Smart Lab Insights header ──────────────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFDDDDDD), width: 1),
-                ),
-                child: const Icon(
-                  Icons.monitor_heart_outlined,
-                  size: 18,
-                  color: _cardGreen,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Smart Lab Insights',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Upload your medical reports and let our AI translate complex jargon into actionable health insights and visualize your progress over time.',
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF555555),
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Upload Lab Report card ─────────────────────────────────────
-          _buildUploadCard(context),
-          const SizedBox(height: 16),
-
-          // ── Comparative Analytics card ─────────────────────────────────
-          _buildComparativeCard(),
-          const SizedBox(height: 16),
-
-          // ── Recent Archives card ───────────────────────────────────────
-          _buildRecentArchivesCard(),
-        ],
-      ),
-
-      // ── FABs ────────────────────────────────────────────────────────────
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'chat',
+        // ── FAB ────────────────────────────────────────────────────────────
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton(
+            heroTag: 'chat_reports',
             mini: true,
             backgroundColor: _cardGreen,
             foregroundColor: Colors.white,
@@ -139,8 +77,8 @@ class ReportsPage extends StatelessWidget {
             onPressed: () {},
             child: const Icon(Icons.chat_bubble_outline, size: 18),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

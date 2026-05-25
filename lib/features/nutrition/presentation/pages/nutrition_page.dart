@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../home/presentation/pages/main_shell_page.dart';
+
 class NutritionPage extends StatefulWidget {
   const NutritionPage({super.key});
 
@@ -14,120 +16,108 @@ class _NutritionPageState extends State<NutritionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.green.shade50,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.green.shade50,
-        elevation: 0,
-        leadingWidth: 75,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 18, top: 5, bottom: 5),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
-          ),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Hello Yoro!",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              "Good evening",
-              style: TextStyle(
-                color: Color(0xff5D8B74),
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 18),
-            child: Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xff5D8B74),
-                size: 22,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        children: [
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      children: [
           // ── Nutrition Tracker header ─────────────────────────────────────
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nutrition Tracker',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Nutrition Tracker',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1A1A1A),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Achieve wellness goals...',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+                    SizedBox(height: 2),
+                    Text(
+                      'Achieve wellness goals...',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+
+              const SizedBox(width: 6),
+
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _IconBtn(icon: Icons.camera_alt_outlined),
-                  const SizedBox(width: 8),
-                  _IconBtn(icon: Icons.mic_none_rounded),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4A7C6F),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.add, color: Colors.white, size: 16),
-                        SizedBox(width: 4),
-                        Text(
-                          'Log Meal',
-                          style: TextStyle(
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const AddToMealSheet(selectedMode: 0,),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A7C6F),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add,
                             color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                            size: 16,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 4),
+                          Text(
+                            'Log Meal',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+
+                  const SizedBox(width: 6),
+
+                  GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const AddToMealSheet(selectedMode: 0,),
+                        );
+                      },
+                      child: _IconBtn(icon: Icons.camera_alt_outlined)),
+
+                  const SizedBox(width: 6),
+
+                  GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const AddToMealSheet(selectedMode: 2,),
+                        );
+                      },
+                      child: _IconBtn(icon: Icons.mic_none_rounded)),
                 ],
               ),
             ],
@@ -180,8 +170,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     value: 0,
                     minHeight: 6,
                     backgroundColor: Colors.grey.shade200,
-                    valueColor:
-                    const AlwaysStoppedAnimation(Color(0xFF4A7C6F)),
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFF4A7C6F)),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -333,9 +322,9 @@ class _NutritionPageState extends State<NutritionPage> {
                 const SizedBox(height: 16),
                 const _QualityRow(
                   label: "TODAY'S QUALITY",
-                  healthy: 0,
-                  average: 100,
-                  junk: 0,
+                  healthy: 15,
+                  average: 25,
+                  junk: 10,
                 ),
                 const SizedBox(height: 12),
                 const _QualityRow(
@@ -364,36 +353,45 @@ class _NutritionPageState extends State<NutritionPage> {
           const SizedBox(height: 14),
 
           // ── Recent & Frequent ────────────────────────────────────────────
-          _Card(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
+          // ── Recent & Frequent ────────────────────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _Card(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: const [
                       Text(
                         'Recent',
                         style: TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w700),
                       ),
+                      SizedBox(height: 8),
+                      Text(
+                        'No recent meals',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
                     ],
                   ),
                 ),
-                Expanded(
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Card(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
+                    children: const [
+                      Text(
                         'Frequent',
                         style: TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w700),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
-                        children: const [
+                        children: [
                           _Chip(label: 'Oats'),
                           _Chip(label: 'Eggs'),
                           _Chip(label: 'Rice'),
@@ -402,8 +400,8 @@ class _NutritionPageState extends State<NutritionPage> {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
 
@@ -414,8 +412,7 @@ class _NutritionPageState extends State<NutritionPage> {
               children: [
                 const Text(
                   'Hydration Tracker',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -441,12 +438,10 @@ class _NutritionPageState extends State<NutritionPage> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          border:
-                          Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child:
-                        const Icon(Icons.remove, size: 18),
+                        child: const Icon(Icons.remove, size: 18),
                       ),
                     ),
                     GestureDetector(
@@ -482,8 +477,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     ),
                     Text(
                       '${(_hydrationGoal - _hydrationGlasses) * _mlPerGlass} ml left',
-                      style: const TextStyle(
-                          fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -494,8 +488,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     value: _hydrationGlasses / _hydrationGoal,
                     minHeight: 8,
                     backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation(
-                        Color(0xFF4A7C6F)),
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFF4A7C6F)),
                   ),
                 ),
               ],
@@ -510,8 +503,7 @@ class _NutritionPageState extends State<NutritionPage> {
               children: [
                 const Text(
                   'Weekly Trends',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -544,8 +536,7 @@ class _NutritionPageState extends State<NutritionPage> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 
@@ -622,9 +613,7 @@ class _MacroItem extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-              fontSize: 10,
-              color: Colors.grey,
-              fontWeight: FontWeight.w600),
+              fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 4),
         RichText(
@@ -633,14 +622,11 @@ class _MacroItem extends StatelessWidget {
               TextSpan(
                 text: consumed,
                 style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: color),
+                    fontSize: 15, fontWeight: FontWeight.w800, color: color),
               ),
               TextSpan(
                 text: ' / $goal',
-                style: const TextStyle(
-                    fontSize: 12, color: Colors.grey),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
@@ -708,19 +694,23 @@ class _MealRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
-          const Text(
-            '0',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          Column(
+            children: [
+              const Text(
+                '0',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'OF $kcal',
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-          Text(
-            'OF $kcal',
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
-          ),
+
           const SizedBox(width: 10),
           const Icon(Icons.add, size: 20, color: Color(0xFF4A7C6F)),
         ],
@@ -758,19 +748,19 @@ class _QualityRow extends StatelessWidget {
             ),
             Row(
               children: [
-                Text('${healthy}%',
+                Text('${healthy}% Healty',
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: Colors.green)),
                 const SizedBox(width: 8),
-                Text('${average}%',
+                Text('${average}% Average',
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: Colors.grey)),
                 const SizedBox(width: 8),
-                Text('${junk}%',
+                Text('${junk}% Junk',
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -786,18 +776,15 @@ class _QualityRow extends StatelessWidget {
             children: [
               Expanded(
                 flex: healthy < 1 ? 1 : healthy,
-                child: Container(
-                    height: 6, color: Colors.green.shade400),
+                child: Container(height: 6, color: Colors.green.shade400),
               ),
               Expanded(
                 flex: average < 1 ? 98 : average,
-                child: Container(
-                    height: 6, color: Colors.grey.shade300),
+                child: Container(height: 6, color: Colors.grey.shade300),
               ),
               Expanded(
                 flex: junk < 1 ? 1 : junk,
-                child: Container(
-                    height: 6, color: Colors.orange.shade400),
+                child: Container(height: 6, color: Colors.orange.shade400),
               ),
             ],
           ),
@@ -850,15 +837,12 @@ class _Bar extends StatelessWidget {
           width: 28,
           height: 60 * fraction,
           decoration: BoxDecoration(
-            color: highlight
-                ? const Color(0xFF4A7C6F)
-                : Colors.green.shade100,
+            color: highlight ? const Color(0xFF4A7C6F) : Colors.green.shade100,
             borderRadius: BorderRadius.circular(6),
           ),
         ),
         const SizedBox(height: 6),
-        Text(label,
-            style: const TextStyle(fontSize: 9, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
       ],
     );
   }
@@ -874,11 +858,9 @@ class _StatChip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         Text(value,
-            style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w800)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       ],
     );
   }
