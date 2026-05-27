@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:classroom_app/features/auth/presentation/bloc/auth_bloc.dart';
@@ -54,9 +55,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             context.push(
               AppRoutes.verifyIdentity,
               extra: {
+                'name': state.fullName,
                 'email': state.email,
-                'fullName': state.fullName,
-                'phoneNumber': state.phoneNumber,
+                'phone': state.phoneNumber,
                 'password': state.password,
               },
             ).then((_) {
@@ -164,11 +165,18 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   label: 'Phone Number *',
                   hint: 'Phone Number',
                   icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
                   onChanged: (val) {
                     // Reset the state when user starts editing
                     if (state.status == AuthStatus.success) {
                       context.read<AuthBloc>().add(const AuthReset());
                     }
+
+                    // Only allow valid 10 digit number
                     context.read<AuthBloc>().add(AuthPhoneNumberChanged(val));
                   },
                 ),
@@ -305,6 +313,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     bool obscureText = false,
     Widget? suffixIcon,
     required Function(String) onChanged,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +324,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color:  Color(0xFF0D2020),
+            color: Color(0xFF0D2020),
             letterSpacing: 0.8,
             fontFamily: 'SF Pro Display',
           ),
@@ -323,10 +333,20 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         TextFormField(
           obscureText: obscureText,
           onChanged: onChanged,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(fontSize:14, color: Colors.black26, fontWeight: FontWeight.w300),
-            prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
+            hintStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.black26,
+              fontWeight: FontWeight.w300,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: Colors.grey.withValues(alpha: 0.4),
+              size: 22,
+            ),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
@@ -342,7 +362,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF0D4D3B), width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: 16,
+            ),
           ),
         ),
       ],

@@ -8,6 +8,8 @@ import 'package:classroom_app/features/auth/presentation/pages/reset_access_page
 import 'package:classroom_app/features/auth/presentation/pages/verify_identity_page.dart';
 import 'package:classroom_app/features/auth/presentation/pages/secure_account_page.dart';
 
+import '../../features/auth/presentation/pages/setup_profile_page.dart';
+
 class AppRoutes {
   static const String splash = '/';
   static const String createAccount = '/create-account';
@@ -17,6 +19,7 @@ class AppRoutes {
   static const String secureAccount = '/secure-account';
   static const String homePage = '/home-page';
   static const String profile = '/profile';
+  static const String setupProfile = '/setupProfile';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -45,7 +48,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.verifyIdentity,
       name: 'verifyIdentity',
-      builder: (context, state) => const VerifyIdentityPage(),
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+
+        return VerifyIdentityPage(
+          name: data?["name"] ?? "",
+          email: data?["email"] ?? "",
+          phone: data?["phone"] ?? "",
+          password: data?["password"] ?? "",
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.secureAccount,
@@ -60,6 +72,12 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.profile,
       name: 'profile',
       builder: (context, state) => const ProfilePage(),
+    ),
+    // In your AppRoutes
+    GoRoute(
+      path: AppRoutes.setupProfile,
+      name: 'setupProfile',
+      builder: (context, state) => const SetupProfilePage(),
     ),
   ],
 );

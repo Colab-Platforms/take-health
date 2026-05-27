@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/core/routes/app_routes.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 import '../widgets/auth_app_bar.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,17 +20,20 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
   bool _isLoading = false;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController =
+  TextEditingController();
+
+  final TextEditingController _passwordController =
+  TextEditingController();
 
   Future<void> _login() async {
-    // Validate inputs
-    if (_emailController.text.isEmpty && _phoneController.text.isEmpty) {
-      _showErrorSnackBar('Please enter email or phone number');
+    // Validate Email
+    if (_emailController.text.isEmpty) {
+      _showErrorSnackBar('Please enter email');
       return;
     }
 
+    // Validate Password
     if (_passwordController.text.isEmpty) {
       _showErrorSnackBar('Please enter password');
       return;
@@ -40,20 +45,24 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://ai-healthcare-ip89.onrender.com/api/auth/login'),
+        Uri.parse(
+          'https://ai-healthcare-ip89.onrender.com/api/auth/login',
+        ),
         headers: {
           'accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'password': _passwordController.text,
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
         }),
       );
 
       if (response.statusCode == 200) {
-        // Login successful
+        final data = jsonDecode(response.body);
+
+        debugPrint(data.toString());
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -63,17 +72,19 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
 
-          // Navigate to HomePage
+          // Navigate to Home
           context.go(AppRoutes.homePage);
         }
       } else {
-        // Login failed
-        String errorMessage = 'Login failed. Please try again.';
+        String errorMessage =
+            'Login failed. Please try again.';
+
         try {
           final errorData = jsonDecode(response.body);
-          errorMessage = errorData['message'] ?? errorMessage;
+
+          errorMessage =
+              errorData['message'] ?? errorMessage;
         } catch (e) {
-          // If response body is not JSON, use status code message
           errorMessage = 'Error: ${response.statusCode}';
         }
 
@@ -82,9 +93,10 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } catch (e) {
-      // Network or other errors
       if (mounted) {
-        _showErrorSnackBar('Network error: Unable to connect to server');
+        _showErrorSnackBar(
+          'Network error: Unable to connect to server',
+        );
       }
     } finally {
       if (mounted) {
@@ -109,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _phoneController.dispose();
+
     super.dispose();
   }
 
@@ -119,12 +131,15 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.white,
       appBar: const AuthAppBar(),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        padding:
+        const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 60),
 
+            // Title
             Text(
               'Welcome Back',
               style: AppTextStyles.heading.copyWith(
@@ -134,6 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                 fontFamily: 'SF Pro Display',
               ),
             ),
+
             Text(
               'Login to your account',
               style: TextStyle(
@@ -147,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 30),
 
-            // ── Email Field ───────────────────────────────────
+            // Email Field
             _buildField(
               label: 'Email Address',
               hint: 'admin@fitcure.com',
@@ -155,19 +171,10 @@ class _LoginPageState extends State<LoginPage> {
               controller: _emailController,
               onChanged: (val) {},
             ),
+
             const SizedBox(height: 15),
 
-            // ── Phone Field ───────────────────────────────────
-            _buildField(
-              label: 'Phone Number',
-              hint: '9876543210',
-              icon: Icons.phone_outlined,
-              controller: _phoneController,
-              onChanged: (val) {},
-            ),
-            const SizedBox(height: 15),
-
-            // ── Password Field ────────────────────────────────
+            // Password Field
             _buildField(
               label: 'Password',
               hint: '••••••••••••••',
@@ -176,18 +183,25 @@ class _LoginPageState extends State<LoginPage> {
               controller: _passwordController,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off_outlined,
+                  _isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off_outlined,
                   color: Colors.grey,
                   size: 20,
                 ),
-                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible =
+                    !_isPasswordVisible;
+                  });
+                },
               ),
               onChanged: (val) {},
             ),
 
             const SizedBox(height: 12),
 
-            // ── Remember Me & Forgot Password ────────────────
+            // Remember Me & Forgot Password
             Row(
               children: [
                 SizedBox(
@@ -195,12 +209,24 @@ class _LoginPageState extends State<LoginPage> {
                   height: 24,
                   child: Checkbox(
                     value: _rememberMe,
-                    onChanged: (val) => setState(() => _rememberMe = val ?? false),
-                    side: const BorderSide(color: Colors.black12, width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    onChanged: (val) {
+                      setState(() {
+                        _rememberMe = val ?? false;
+                      });
+                    },
+                    side: const BorderSide(
+                      color: Colors.black12,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(4),
+                    ),
                   ),
                 ),
+
                 const SizedBox(width: 8),
+
                 Text(
                   'Remember Me',
                   style: TextStyle(
@@ -211,9 +237,12 @@ class _LoginPageState extends State<LoginPage> {
                     fontFamily: 'SF Pro Display',
                   ),
                 ),
+
                 const Spacer(),
+
                 GestureDetector(
-                  onTap: () => context.push(AppRoutes.resetAccess),
+                  onTap: () =>
+                      context.push(AppRoutes.resetAccess),
                   child: Text(
                     'Forgot Password?',
                     style: TextStyle(
@@ -230,41 +259,55 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 15),
 
-            // ── Sign In Button ───────────────────────────────
+            // Sign In Button
             SizedBox(
               width: double.infinity,
               height: 60,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D4D3B),
+                  backgroundColor:
+                  const Color(0xFF0D4D3B),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                    BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: _isLoading ? null : _login,
+                onPressed:
+                _isLoading ? null : _login,
                 child: _isLoading
                     ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(
+                  child:
+                  CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor:
+                    AlwaysStoppedAnimation<
+                        Color>(
+                      Colors.white,
+                    ),
                   ),
                 )
                     : const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment:
+                  MainAxisAlignment.center,
                   children: [
                     Text(
                       'Sign In',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                        FontWeight.w600,
                         letterSpacing: 1.5,
-                        fontFamily: 'SF Pro Display',
+                        fontFamily:
+                        'SF Pro Display',
                       ),
                     ),
                     SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, size: 20),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -272,10 +315,12 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 35),
 
-            // ── Create Account Link ──────────────────────────
+            // Create Account
             Center(
               child: GestureDetector(
-                onTap: () => context.push(AppRoutes.createAccount),
+                onTap: () => context.push(
+                  AppRoutes.createAccount,
+                ),
                 child: Column(
                   children: [
                     Text(
@@ -283,7 +328,8 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0D4D3B),
+                        color:
+                        const Color(0xFF0D4D3B),
                         letterSpacing: 0.5,
                         fontFamily: 'SF Pro Display',
                       ),
@@ -292,6 +338,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+
             const SizedBox(height: 40),
           ],
         ),
@@ -309,7 +356,8 @@ class _LoginPageState extends State<LoginPage> {
     required TextEditingController controller,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -321,31 +369,59 @@ class _LoginPageState extends State<LoginPage> {
             fontFamily: 'SF Pro Display',
           ),
         ),
+
         const SizedBox(height: 5),
+
         TextFormField(
           controller: controller,
           obscureText: obscureText,
           onChanged: onChanged,
-          textAlignVertical: TextAlignVertical.center,
+          textAlignVertical:
+          TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w300, fontSize: 14),
-            prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
+            hintStyle: const TextStyle(
+              color: Colors.black26,
+              fontWeight: FontWeight.w300,
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color:
+              Colors.grey.withValues(alpha: 0.4),
+              size: 22,
+            ),
             suffixIcon: suffixIcon,
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.black12, width: 1.5),
+              borderRadius:
+              BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.black12,
+                width: 1.5,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.black12, width: 1.5),
+              borderRadius:
+              BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.black12,
+                width: 1.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF0D4D3B), width: 1.5),
+              borderRadius:
+              BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF0D4D3B),
+                width: 1.5,
+              ),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            contentPadding:
+            const EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: 16,
+            ),
           ),
         ),
       ],

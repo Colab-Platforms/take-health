@@ -1,14 +1,30 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/core/routes/app_routes.dart';
 import 'package:pinput/pinput.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../widgets/auth_app_bar.dart';
 import '../bloc/auth_bloc.dart';
 
 class VerifyIdentityPage extends StatefulWidget {
-  const VerifyIdentityPage({super.key});
+  final String name;
+  final String email;
+  final String phone;
+  final String password;
+
+  const VerifyIdentityPage({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.password,
+  });
 
   @override
   State<VerifyIdentityPage> createState() => _VerifyIdentityPageState();
@@ -17,10 +33,95 @@ class VerifyIdentityPage extends StatefulWidget {
 class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
   final TextEditingController _otpController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    // Reset any previous state if needed
+  bool _isLoading = false;
+  String? _otpError;
+
+  Future<void> _verifyOtp() async {
+    FocusScope.of(context).unfocus();
+
+    // OTP Validation
+    if (_otpController.text.trim().isEmpty) {
+      setState(() {
+        _otpError = "OTP is required";
+      });
+      return;
+    }
+
+    if (_otpController.text.trim().length != 6) {
+      setState(() {
+        _otpError = "OTP must be 6 digits";
+      });
+      return;
+    }
+
+    setState(() {
+      _otpError = null;
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'https://ai-healthcare-ip89.onrender.com/api/auth/register',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "name": widget.name,
+          "email": widget.email,
+          "otp": _otpController.text.trim(),
+          "phone": widget.phone,
+          "password": widget.password,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Save token locally
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString("token", data["token"] ?? "");
+        await prefs.setString("userId", data["_id"] ?? "");
+        await prefs.setString("name", data["name"] ?? "");
+        await prefs.setString("email", data["email"] ?? "");
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("OTP Verified Successfully"),
+          ),
+        );
+
+        context.pushReplacement(AppRoutes.setupProfile);
+      } else {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data["message"] ?? "Verification failed",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -45,7 +146,6 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
       backgroundColor: Colors.white,
       appBar: AuthAppBar(
         onBackPressed: () {
-          // Reset the auth state when going back
           context.read<AuthBloc>().add(const AuthReset());
           context.pop();
         },
@@ -57,7 +157,6 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
           children: [
             const SizedBox(height: 20),
 
-            // ── Title ─────────────────────────────────────────
             Center(
               child: Column(
                 children: [
@@ -87,7 +186,6 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
 
             const SizedBox(height: 48),
 
-            // ── Verification Code ────────────────────────────
             Center(
               child: Column(
                 children: [
@@ -104,21 +202,49 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
+
             Center(
               child: Pinput(
                 controller: _otpController,
                 length: 6,
+                keyboardType: TextInputType.number,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: defaultPinTheme.copyWith(
                   decoration: defaultPinTheme.decoration!.copyWith(
-                    border: Border.all(color: const Color(0xFF0D4D3B), width: 1.5),
+                    border: Border.all(
+                      color: const Color(0xFF0D4D3B),
+                      width: 1.5,
+                    ),
                   ),
                 ),
+                onChanged: (value) {
+                  if (_otpError != null) {
+                    setState(() {
+                      _otpError = null;
+                    });
+                  }
+                },
               ),
             ),
 
+            if (_otpError != null) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  _otpError!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 24),
+
             Center(
               child: RichText(
                 text: TextSpan(
@@ -144,7 +270,6 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
 
             const SizedBox(height: 48),
 
-            // ── Verify Code Button ───────────────────────────
             SizedBox(
               width: double.infinity,
               height: 60,
@@ -155,11 +280,17 @@ class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  // Handle verification
-                  context.pushReplacement(AppRoutes.secureAccount);
-                },
-                child: const Row(
+                onPressed: _isLoading ? null : _verifyOtp,
+                child: _isLoading
+                    ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                    : const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
