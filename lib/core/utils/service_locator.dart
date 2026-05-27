@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:classroom_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:classroom_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:classroom_app/features/auth/domain/usecases/register_with_email_usecase.dart';
+import 'package:classroom_app/features/auth/domain/usecases/send_registration_otp_use_case.dart';
 import 'package:classroom_app/features/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../features/auth/data/datasource/auth_remote_data_source.dart';
@@ -22,6 +23,7 @@ void setupServiceLocator() {
 
   // ── Use cases ─────────────────────────────────────────────────
   sl.registerLazySingleton(() => RegisterWithEmailUseCase(sl()));
+  sl.registerLazySingleton(() => SendRegistrationOtpUseCase(sl())); // Add this
   sl.registerLazySingleton(() => SignInWithAppleUseCase(sl()));
   sl.registerLazySingleton(() => SignInWithFacebookUseCase(sl()));
   sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl()));
@@ -29,7 +31,7 @@ void setupServiceLocator() {
   // ── BLoC ──────────────────────────────────────────────────────
   sl.registerFactory(
         () => AuthBloc(
-
+      sendRegistrationOtpUseCase: sl(), // Now this will be properly injected
     ),
   );
 }

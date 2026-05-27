@@ -1,12 +1,21 @@
 import 'package:classroom_app/features/auth/domain/entities/user_entity.dart';
 import 'package:classroom_app/features/auth/domain/repositories/auth_repository.dart';
-
 import '../datasource/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
 
   const AuthRepositoryImpl(this._remoteDataSource);
+
+  @override
+  Future<Map<String, dynamic>> sendRegistrationOtp(String name, String email) async {
+    try {
+      final response = await _remoteDataSource.sendRegistrationOtp(name, email);
+      return response;
+    } catch (e) {
+      throw Exception('Failed to send OTP: $e');
+    }
+  }
 
   @override
   Future<UserEntity> registerWithEmail(String email) async {

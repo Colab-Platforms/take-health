@@ -1,6 +1,9 @@
 import 'package:classroom_app/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthRepository {
+  /// Send OTP for registration
+  Future<Map<String, dynamic>> sendRegistrationOtp(String name, String email);
+
   /// Register with email — stub for now, implement later
   Future<UserEntity> registerWithEmail(String email);
 

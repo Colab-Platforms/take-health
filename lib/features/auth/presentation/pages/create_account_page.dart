@@ -5,7 +5,6 @@ import 'package:classroom_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/password_validation_checker.dart';
 import '../widgets/auth_app_bar.dart';
-
 import '../../../../core/routes/app_routes.dart';
 
 class CreateAccountPage extends StatefulWidget {
@@ -21,19 +20,66 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Match white background from Image 1
+      backgroundColor: Colors.white,
       appBar: const AuthAppBar(),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.status == AuthStatus.success) {
+            // Close any open dialogs
+            if (ModalRoute.of(context)?.isCurrent != true) {
+              Navigator.of(context).pop();
+            }
+
+            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(backgroundColor:  Color(0xFF0D4D3B),
-                  content: Text('Account created successfully!')),
+              const SnackBar(
+                backgroundColor: Color(0xFF0D4D3B),
+                content: Text('Verification code sent successfully!'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            // Navigate to VerifyIdentityPage with user data
+            context.push(
+              AppRoutes.verifyIdentity,
+              extra: {
+                'email': state.email,
+                'fullName': state.fullName,
+                'phoneNumber': state.phoneNumber,
+                'password': state.password,
+              },
             );
           }
+
           if (state.status == AuthStatus.failure) {
+            // Close loading dialog if open
+            if (ModalRoute.of(context)?.isCurrent != true) {
+              Navigator.of(context).pop();
+            }
+
+            // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error')),
+              SnackBar(
+                backgroundColor: Colors.red,
+                content: Text(state.errorMessage ?? 'Error creating account'),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+
+          if (state.status == AuthStatus.loading) {
+            // Show loading dialog
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D4D3B)),
+                  ),
+                ),
+              ),
             );
           }
         },
@@ -44,7 +90,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                
+
                 Text(
                   'Create Account',
                   style: AppTextStyles.heading.copyWith(
@@ -64,7 +110,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     fontFamily: 'SF Pro Display',
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
 
                 // ── Form Fields ───────────────────────────────────
@@ -75,7 +121,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   onChanged: (val) => context.read<AuthBloc>().add(AuthFullNameChanged(val)),
                 ),
                 const SizedBox(height: 12),
-                
+
                 _buildField(
                   label: 'Email Address *',
                   hint: 'admin@fitcure.com',
@@ -83,7 +129,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   onChanged: (val) => context.read<AuthBloc>().add(AuthEmailChanged(val)),
                 ),
                 const SizedBox(height: 12),
-                
+
                 _buildField(
                   label: 'Phone Number *',
                   hint: 'Phone Number',
@@ -91,7 +137,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   onChanged: (val) => context.read<AuthBloc>().add(AuthPhoneNumberChanged(val)),
                 ),
                 const SizedBox(height: 12),
-                
+
                 _buildField(
                   label: 'Password *',
                   hint: '••••••••••••••',
@@ -111,7 +157,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 // ── Password Validation Checker ───────────────────
                 if (state.password.isNotEmpty)
                   PasswordValidationChecker(password: state.password),
-                
+
                 const SizedBox(height: 32),
 
                 // ── Continue Button ───────────────────────────────
@@ -120,20 +166,32 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   height: 60,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D4D3B), // Dark green from Image 1
-                      disabledBackgroundColor: const Color(0xFF0D4D3B),
+                      backgroundColor: const Color(0xFF0D4D3B),
+                      disabledBackgroundColor: const Color(0xFF0D4D3B).withOpacity(0.5),
                       disabledForegroundColor: Colors.white.withOpacity(0.6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: state.isSubmitEnabled
-                        ? () => context.read<AuthBloc>().add(const AuthCreateAccountSubmitted())
+                    onPressed: state.isSubmitEnabled && state.status != AuthStatus.loading
+                        ? () {
+                      // Send OTP
+                      context.read<AuthBloc>().add(const AuthSendRegistrationOtp());
+                    }
                         : null,
-                    child: Row(
+                    child: state.status == AuthStatus.loading
+                        ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Continue',
                           style: TextStyle(
                             fontSize: 16,
@@ -142,13 +200,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             fontFamily: 'SF Pro Display',
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 20),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, size: 20),
                       ],
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
 
                 // ── Footer ────────────────────────────────────────
@@ -222,7 +280,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             prefixIcon: Icon(icon, color: Colors.grey.withValues(alpha: 0.4), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
-           // fillColor: const Color(0xFFF0F5F9), // Light blue-grey fill
+            fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.black12, width: 1.5),
@@ -235,7 +293,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF0D4D3B), width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16), // Reduced from 18
+            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),
       ],

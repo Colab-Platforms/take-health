@@ -35,8 +35,9 @@ class AuthPasswordChanged extends AuthEvent {
   List<Object?> get props => [password];
 }
 
-class AuthCreateAccountSubmitted extends AuthEvent {
-  const AuthCreateAccountSubmitted();
+// Changed from AuthCreateAccountSubmitted to be more specific
+class AuthSendRegistrationOtp extends AuthEvent {
+  const AuthSendRegistrationOtp();
 }
 
 class AuthReset extends AuthEvent {

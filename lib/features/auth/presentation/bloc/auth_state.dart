@@ -23,10 +23,10 @@ class AuthState extends Equatable {
 
   bool get isSubmitEnabled =>
       fullName.isNotEmpty &&
-      email.contains('@') &&
-      phoneNumber.isNotEmpty &&
-      password.length >= 6 &&
-      status != AuthStatus.loading;
+          email.contains('@') &&
+          phoneNumber.isNotEmpty &&
+          password.length >= 6 &&
+          status != AuthStatus.loading;
 
   AuthState copyWith({
     AuthStatus? status,
@@ -50,12 +50,12 @@ class AuthState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        fullName,
-        email,
-        phoneNumber,
-        password,
-        user,
-        errorMessage,
-      ];
+    status,
+    fullName,
+    email,
+    phoneNumber,
+    password,
+    user,
+    errorMessage,
+  ];
 }
