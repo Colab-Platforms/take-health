@@ -16,6 +16,14 @@ class CreateAccountPage extends StatefulWidget {
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   bool _isPasswordVisible = false;
+  bool _isNavigating = false; // Add this flag to prevent multiple navigation
+
+  @override
+  void initState() {
+    super.initState();
+    // Reset the state when page is initialized
+    context.read<AuthBloc>().add(const AuthReset());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +32,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       appBar: const AuthAppBar(),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state.status == AuthStatus.success) {
-            // Close any open dialogs
+          // Handle OTP sent successfully
+          if (state.status == AuthStatus.success && !_isNavigating) {
+            _isNavigating = true;
+
+            // Close loading dialog if open
             if (ModalRoute.of(context)?.isCurrent != true) {
               Navigator.of(context).pop();
             }
@@ -48,10 +59,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 'phoneNumber': state.phoneNumber,
                 'password': state.password,
               },
-            );
+            ).then((_) {
+              // Reset navigation flag when coming back
+              _isNavigating = false;
+              // Reset the state when coming back from verify page
+              context.read<AuthBloc>().add(const AuthReset());
+            });
           }
 
           if (state.status == AuthStatus.failure) {
+            _isNavigating = false;
+
             // Close loading dialog if open
             if (ModalRoute.of(context)?.isCurrent != true) {
               Navigator.of(context).pop();
@@ -118,7 +136,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   label: 'Full Name *',
                   hint: 'Full Name',
                   icon: Icons.person_outline,
-                  onChanged: (val) => context.read<AuthBloc>().add(AuthFullNameChanged(val)),
+                  onChanged: (val) {
+                    // Reset the state when user starts editing
+                    if (state.status == AuthStatus.success) {
+                      context.read<AuthBloc>().add(const AuthReset());
+                    }
+                    context.read<AuthBloc>().add(AuthFullNameChanged(val));
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -126,7 +150,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   label: 'Email Address *',
                   hint: 'admin@fitcure.com',
                   icon: Icons.email_outlined,
-                  onChanged: (val) => context.read<AuthBloc>().add(AuthEmailChanged(val)),
+                  onChanged: (val) {
+                    // Reset the state when user starts editing
+                    if (state.status == AuthStatus.success) {
+                      context.read<AuthBloc>().add(const AuthReset());
+                    }
+                    context.read<AuthBloc>().add(AuthEmailChanged(val));
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -134,7 +164,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   label: 'Phone Number *',
                   hint: 'Phone Number',
                   icon: Icons.phone_outlined,
-                  onChanged: (val) => context.read<AuthBloc>().add(AuthPhoneNumberChanged(val)),
+                  onChanged: (val) {
+                    // Reset the state when user starts editing
+                    if (state.status == AuthStatus.success) {
+                      context.read<AuthBloc>().add(const AuthReset());
+                    }
+                    context.read<AuthBloc>().add(AuthPhoneNumberChanged(val));
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -151,7 +187,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     ),
                     onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                   ),
-                  onChanged: (val) => context.read<AuthBloc>().add(AuthPasswordChanged(val)),
+                  onChanged: (val) {
+                    // Reset the state when user starts editing
+                    if (state.status == AuthStatus.success) {
+                      context.read<AuthBloc>().add(const AuthReset());
+                    }
+                    context.read<AuthBloc>().add(AuthPasswordChanged(val));
+                  },
                 ),
 
                 // ── Password Validation Checker ───────────────────
@@ -247,6 +289,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // Reset the state when page is disposed
+    context.read<AuthBloc>().add(const AuthReset());
   }
 
   Widget _buildField({

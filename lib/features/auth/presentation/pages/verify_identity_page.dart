@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/core/routes/app_routes.dart';
 import 'package:pinput/pinput.dart';
-import '../widgets/password_validation_checker.dart';
 import '../widgets/auth_app_bar.dart';
+import '../bloc/auth_bloc.dart';
 
-class VerifyIdentityPage extends StatelessWidget {
+class VerifyIdentityPage extends StatefulWidget {
   const VerifyIdentityPage({super.key});
+
+  @override
+  State<VerifyIdentityPage> createState() => _VerifyIdentityPageState();
+}
+
+class _VerifyIdentityPageState extends State<VerifyIdentityPage> {
+  final TextEditingController _otpController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Reset any previous state if needed
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +43,13 @@ class VerifyIdentityPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const AuthAppBar(),
+      appBar: AuthAppBar(
+        onBackPressed: () {
+          // Reset the auth state when going back
+          context.read<AuthBloc>().add(const AuthReset());
+          context.pop();
+        },
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
@@ -64,7 +84,7 @@ class VerifyIdentityPage extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 48),
 
             // ── Verification Code ────────────────────────────
@@ -81,14 +101,14 @@ class VerifyIdentityPage extends StatelessWidget {
                       fontFamily: 'SF Pro Display',
                     ),
                   ),
-                  Text("data")
                 ],
               ),
             ),
             const SizedBox(height: 20),
             Center(
               child: Pinput(
-                length: 4,
+                controller: _otpController,
+                length: 6,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: defaultPinTheme.copyWith(
                   decoration: defaultPinTheme.decoration!.copyWith(
@@ -111,7 +131,7 @@ class VerifyIdentityPage extends StatelessWidget {
                   children: [
                     const TextSpan(text: "Didn't receive code? "),
                     TextSpan(
-                      text: 'Resend code in 30s',
+                      text: 'Resend code',
                       style: TextStyle(
                         color: const Color(0xFF0D4D3B),
                         fontFamily: 'SF Pro Display',
@@ -135,7 +155,10 @@ class VerifyIdentityPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () => context.push(AppRoutes.secureAccount),
+                onPressed: () {
+                  // Handle verification
+                  context.pushReplacement(AppRoutes.secureAccount);
+                },
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -154,13 +177,17 @@ class VerifyIdentityPage extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 60),
-
-
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
   }
 }
