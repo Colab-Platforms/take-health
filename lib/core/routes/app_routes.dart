@@ -12,7 +12,7 @@ import 'package:classroom_app/features/auth/presentation/pages/secure_account_pa
 import '../../features/auth/presentation/pages/setup_profile_page.dart';
 
 class AppRoutes {
-  static const String splash = '/';
+  static const String splash = '/'; // Initial route
   static const String createAccount = '/create-account';
   static const String login = '/login';
   static const String resetAccess = '/reset-access';
