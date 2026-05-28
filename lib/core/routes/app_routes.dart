@@ -1,3 +1,4 @@
+import 'package:classroom_app/features/auth/presentation/pages/forget_password_otp.dart';
 import 'package:classroom_app/features/home/presentation/pages/main_shell_page.dart';
 import 'package:classroom_app/features/profile/presentation/pages/profile_page.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,8 @@ class AppRoutes {
   static const String homePage = '/home-page';
   static const String profile = '/profile';
   static const String setupProfile = '/setupProfile';
+  static const String forgetPasswordOtp = '/forgetPasswordOtp';
+  static const String resetPassword = '/reset-password';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -64,20 +67,25 @@ final GoRouter appRouter = GoRouter(
       name: 'secureAccount',
       builder: (context, state) => const SecureAccountPage(),
     ),
-    GoRoute(path: AppRoutes.homePage,
+    GoRoute(
+      path: AppRoutes.homePage,
       name: 'homePage',
-      builder: (context,state)=> const MainShellPage(),
+      builder: (context, state) => const MainShellPage(),
     ),
     GoRoute(
       path: AppRoutes.profile,
       name: 'profile',
       builder: (context, state) => const ProfilePage(),
     ),
-    // In your AppRoutes
     GoRoute(
       path: AppRoutes.setupProfile,
       name: 'setupProfile',
       builder: (context, state) => const SetupProfilePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.forgetPasswordOtp,
+      name: 'forgetPasswordOtp',
+      builder: (context, state) => const ForgetPasswordOtp(),
     ),
   ],
 );
