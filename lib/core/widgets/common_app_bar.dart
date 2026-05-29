@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../features/home/domain/entities/user_profile_provider.dart';
 
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onProfileTap;
@@ -17,6 +22,18 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<UserProfileProvider>();
+
+    ImageProvider avatarImage;
+    if (profile.localImagePath != null) {
+      avatarImage = FileImage(File(profile.localImagePath!));
+    } else if (profile.profilePictureUrl != null &&
+        profile.profilePictureUrl!.isNotEmpty) {
+      avatarImage = NetworkImage(profile.profilePictureUrl!);
+    } else {
+      avatarImage = const NetworkImage('https://i.pravatar.cc/300');
+    }
+
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.green.shade50,
@@ -27,25 +44,23 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 18, top: 5, bottom: 5),
         child: GestureDetector(
           onTap: onProfileTap,
-          child: const CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
-          ),
+          child: CircleAvatar(backgroundImage: avatarImage),
         ),
       ),
-      title: const Column(
+      title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Hello Mayur!',
-            style: TextStyle(
+            '${_greeting()}, ${profile.name}!',
+            style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
           ),
-          SizedBox(height: 2),
-          Text(
+          const SizedBox(height: 2),
+          const Text(
             'Stay healthy today 🌿',
             style: TextStyle(
               color: Color(0xff5D8B74),

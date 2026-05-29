@@ -378,7 +378,8 @@ class QuickLogSheet extends StatelessWidget {
 
 class AddToMealSheet extends StatefulWidget {
   final int selectedMode;
-  const AddToMealSheet({super.key,  required this.selectedMode});
+  final int initialMealType;
+  const AddToMealSheet({super.key,  required this.selectedMode, this.initialMealType = 0});
 
   @override
   State<AddToMealSheet> createState() => _AddToMealSheetState();
@@ -400,6 +401,8 @@ class _AddToMealSheetState extends State<AddToMealSheet> {
   void initState() {
     super.initState();
     _selectedMode = widget.selectedMode; // Set the initial mode from widget
+    _selectedMeal = widget.initialMealType; // Set initial meal type
+
   }
   @override
   Widget build(BuildContext context) {

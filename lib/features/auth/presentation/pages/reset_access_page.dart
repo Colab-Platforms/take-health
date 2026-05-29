@@ -117,9 +117,7 @@ class _ResetAccessPageState extends State<ResetAccessPage> {
           ),
         );
 
-        context.push(
-          AppRoutes.forgetPasswordOtp,
-        );
+        context.push(AppRoutes.forgetPasswordOtp, extra: email);
 
       } else {
 

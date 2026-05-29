@@ -6,13 +6,17 @@ import 'package:classroom_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:classroom_app/core/routes/app_routes.dart';
 import 'package:pinput/pinput.dart';
+import 'package:http/http.dart' as http;
 
 import '../widgets/auth_app_bar.dart';
 import '../bloc/auth_bloc.dart';
 
 class ForgetPasswordOtp extends StatefulWidget {
+  final String email; // 👈 Accept email from previous screen
+
   const ForgetPasswordOtp({
     super.key,
+    required this.email,
   });
 
   @override
@@ -241,29 +245,52 @@ class _ForgetPasswordOtpState extends State<ForgetPasswordOtp> {
     });
 
     try {
-      // OTP verification logic here
-      // You can validate the OTP locally or perform any necessary checks
-
       final otp = _otpController.text.trim();
+
+      // 👇 API Call
+      final response = await http.post(
+        Uri.parse('https://ai-healthcare-ip89.onrender.com/api/auth/verify-reset-code'),
+        headers: {
+          'accept': '*/*',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': widget.email, // 👈 email passed from previous screen
+          'code': otp,
+        }),
+      );
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("OTP Verified Successfully"),
-        ),
-      );
+      final responseBody = jsonDecode(response.body);
 
-      // Navigate to reset password page
-      context.push(AppRoutes.secureAccount);
-      // Or use your named route:
-      // context.pushNamed('resetPassword');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("OTP Verified Successfully"),
+            backgroundColor: Color(0xFF0D4D3B),
+          ),
+        );
+
+        // Navigate to reset password page
+        context.push(AppRoutes.secureAccount, extra: {
+          'email': widget.email,
+          'code': otp,
+        });
+      } else {
+        // Show error from API response if available
+        final message = responseBody['message'] ?? 'Invalid OTP. Please try again.';
+        setState(() {
+          _otpError = message;
+        });
+      }
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: $e"),
+        const SnackBar(
+          content: Text("Network error. Please check your connection."),
+          backgroundColor: Colors.red,
         ),
       );
     } finally {

@@ -62,10 +62,17 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+    // app_routes.dart (router)
     GoRoute(
       path: AppRoutes.secureAccount,
       name: 'secureAccount',
-      builder: (context, state) => const SecureAccountPage(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, String>;
+        return SecureAccountPage(
+          email: extra['email']!,
+          code: extra['code']!,
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.homePage,
@@ -85,7 +92,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.forgetPasswordOtp,
       name: 'forgetPasswordOtp',
-      builder: (context, state) => const ForgetPasswordOtp(),
+      builder: (context, state) {
+        final email = state.extra as String;
+        return ForgetPasswordOtp(email: email);
+      },
     ),
   ],
 );

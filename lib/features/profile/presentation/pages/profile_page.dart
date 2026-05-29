@@ -1,5 +1,17 @@
+import 'dart:io';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../home/domain/entities/user_profile_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _accountExpanded = false;
   bool _goalExpanded = false;
   bool _isLoading = true;
+  bool _isUploadingPhoto = false;
 
   // Account Details controllers
   final _nameCtrl = TextEditingController();
@@ -57,13 +70,12 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // ── Load Data from SharedPreferences ──────────────────────────────────────
+  // ── Load Data ──────────────────────────────────────────────────────────────
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
 
     final prefs = await SharedPreferences.getInstance();
 
-    // Load Account Details
     _nameCtrl.text = prefs.getString('user_name') ?? 'mayur';
     _emailCtrl.text = prefs.getString('user_email') ?? 'mayurranshinge08@gmail.com';
     _phoneCtrl.text = prefs.getString('user_phone') ?? '9167110082';
@@ -75,23 +87,21 @@ class _ProfilePageState extends State<ProfilePage> {
     _isDiabetic = prefs.getString('user_is_diabetic') ?? 'No';
     _medicalCtrl.text = prefs.getString('user_medical_conditions') ?? '';
     _allergiesCtrl.text = prefs.getString('user_allergies') ?? '';
-
-    // Load Goal Settings
     _healthObjective = prefs.getString('user_health_objective') ?? 'Weight loss';
     _targetWeightCtrl.text = prefs.getString('user_target_weight') ?? '64';
     _targetTimeframe = prefs.getString('user_target_timeframe') ?? '12 Weeks (Sustainable)';
 
-    // Calculate BMI and Health Score after loading
-    _calculateMetrics();
+    // Also sync provider with latest prefs
+    await UserProfileProvider.instance.loadFromPrefs();
 
+    _calculateMetrics();
     setState(() => _isLoading = false);
   }
 
-  // ── Save Data to SharedPreferences ────────────────────────────────────────
+  // ── Save Data ──────────────────────────────────────────────────────────────
   Future<void> _saveUserData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Save Account Details
     await prefs.setString('user_name', _nameCtrl.text.trim());
     await prefs.setString('user_email', _emailCtrl.text.trim());
     await prefs.setString('user_phone', _phoneCtrl.text.trim());
@@ -103,16 +113,15 @@ class _ProfilePageState extends State<ProfilePage> {
     await prefs.setString('user_is_diabetic', _isDiabetic);
     await prefs.setString('user_medical_conditions', _medicalCtrl.text.trim());
     await prefs.setString('user_allergies', _allergiesCtrl.text.trim());
-
-    // Save Goal Settings
     await prefs.setString('user_health_objective', _healthObjective);
     await prefs.setString('user_target_weight', _targetWeightCtrl.text.trim());
     await prefs.setString('user_target_timeframe', _targetTimeframe);
 
-    // Recalculate metrics after save
+    // Update provider so CommonAppBar reflects new name instantly
+    await UserProfileProvider.instance.updateName(_nameCtrl.text.trim());
+
     _calculateMetrics();
 
-    // Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -124,17 +133,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // ── Calculate BMI and Health Score ────────────────────────────────────────
+  // ── Metrics ────────────────────────────────────────────────────────────────
   void _calculateMetrics() {
     final double height = double.tryParse(_heightCtrl.text) ?? 0;
     final double weight = double.tryParse(_weightCtrl.text) ?? 0;
 
     if (height > 0 && weight > 0) {
-      // BMI = weight(kg) / (height(m))^2
       _bmi = weight / ((height / 100) * (height / 100));
       _bmi = double.parse(_bmi.toStringAsFixed(1));
 
-      // Calculate Health Score based on BMI
       if (_bmi >= 18.5 && _bmi <= 24.9) {
         _healthScore = 92;
       } else if (_bmi >= 25 && _bmi <= 29.9) {
@@ -147,13 +154,10 @@ class _ProfilePageState extends State<ProfilePage> {
         _healthScore = 85;
       }
 
-      // Adjust health score based on diabetic status and other factors
       if (_isDiabetic == 'Yes') _healthScore -= 10;
       if (_isDiabetic == 'Pre-diabetic') _healthScore -= 5;
-
       _healthScore = _healthScore.clamp(0, 100);
 
-      // Calculate daily calories based on weight and goal
       _calculateDailyCalories();
     } else {
       _bmi = 0;
@@ -168,7 +172,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final double height = double.tryParse(_heightCtrl.text) ?? 0;
     final int age = int.tryParse(_ageCtrl.text) ?? 26;
 
-    // BMR using Mifflin-St Jeor Equation
     double bmr;
     if (_gender == 'Male') {
       bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
@@ -176,7 +179,6 @@ class _ProfilePageState extends State<ProfilePage> {
       bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
 
-    // Adjust based on goal
     if (_healthObjective == 'Weight loss') {
       _dailyCalories = (bmr * 1.2).toInt() - 300;
     } else if (_healthObjective == 'Muscle gain') {
@@ -187,12 +189,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     _dailyCalories = _dailyCalories.clamp(1200, 3500);
 
-    // Calculate macros (Protein, Carbs, Fat)
-    double proteinGrams = 0, carbsGrams = 0, fatGrams = 0;
+    double proteinGrams, carbsGrams, fatGrams;
 
     if (_healthObjective == 'Weight loss') {
-      proteinGrams = (weight * 2.0).roundToDouble(); // 2g per kg
-      fatGrams = (weight * 0.8).roundToDouble(); // 0.8g per kg
+      proteinGrams = (weight * 2.0).roundToDouble();
+      fatGrams = (weight * 0.8).roundToDouble();
       carbsGrams = ((_dailyCalories - (proteinGrams * 4) - (fatGrams * 9)) / 4).roundToDouble();
     } else if (_healthObjective == 'Muscle gain') {
       proteinGrams = (weight * 2.2).roundToDouble();
@@ -227,18 +228,220 @@ class _ProfilePageState extends State<ProfilePage> {
     return const Color(0xFFE53935);
   }
 
+  // ── Avatar Builder ─────────────────────────────────────────────────────────
+  Widget _buildAvatar() {
+    final profile = UserProfileProvider.instance;
+    if (profile.localImagePath != null) {
+      return Image.file(File(profile.localImagePath!), width: 80, height: 80, fit: BoxFit.cover);
+    }
+    if (profile.profilePictureUrl != null && profile.profilePictureUrl!.isNotEmpty) {
+      return Image.network(
+        profile.profilePictureUrl!,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _defaultAvatarWidget(),
+      );
+    }
+    return _defaultAvatarWidget();
+  }
+
+  Widget _defaultAvatarWidget() {
+    return Image.network('https://i.pravatar.cc/300', width: 80, height: 80, fit: BoxFit.cover);
+  }
+
+  // ── Bottom Sheet ───────────────────────────────────────────────────────────
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Update Profile Photo',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFF0F0F0)),
+            ListTile(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _pickAndUploadImage(ImageSource.gallery);
+              },
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(color: const Color(0xFFE8F5EE), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.photo_library_outlined, color: Color(0xFF4A9B6E), size: 20),
+              ),
+              title: const Text('Upload Photo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+              subtitle: const Text('Choose from your gallery', style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFBBBBBB)),
+            ),
+            const Divider(height: 1, indent: 70, color: Color(0xFFF0F0F0)),
+            ListTile(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _pickAndUploadImage(ImageSource.camera);
+              },
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.camera_alt_outlined, color: Color(0xFF3B82F6), size: 20),
+              ),
+              title: const Text('Open Camera', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+              subtitle: const Text('Take a new photo', style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFBBBBBB)),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFF5F5F5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF888888))),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Pick & Upload ──────────────────────────────────────────────────────────
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (picked == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      // Update provider immediately for instant preview everywhere
+      await UserProfileProvider.instance.updateProfilePicture(localPath: picked.path);
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
+
+      final ext = picked.path.split('.').last.toLowerCase();
+      final mimeType = ext == 'png' ? 'png' : 'jpeg';
+
+      final uri = Uri.parse('https://ai-healthcare-ip89.onrender.com/api/auth/upload-profile-picture');
+
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['accept'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'profilePicture',
+            picked.path,
+            contentType: MediaType('image', mimeType),
+          ),
+        );
+
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+
+      debugPrint('Upload status: ${response.statusCode}');
+      debugPrint('Upload body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        String? networkUrl;
+        try {
+          final body = jsonDecode(response.body);
+          networkUrl = body['url'] ??
+              body['profilePictureUrl'] ??
+              body['data']?['url'] ??
+              body['profile_picture'];
+        } catch (_) {}
+
+        // Update provider with network URL if returned
+        await UserProfileProvider.instance.updateProfilePicture(
+          localPath: picked.path,
+          networkUrl: networkUrl,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile photo updated successfully!'),
+              backgroundColor: Color(0xFF4A9B6E),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Revert provider on failure
+        UserProfileProvider.instance.clearLocalImage();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed (${response.statusCode}): ${response.body}'),
+              backgroundColor: const Color(0xFFE53935),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      UserProfileProvider.instance.clearLocalImage();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFE53935),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingPhoto = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF2F5F0),
-        body: const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF4A9B6E),
-          ),
-        ),
+      return const Scaffold(
+        backgroundColor: Color(0xFFF2F5F0),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF4A9B6E))),
       );
     }
+
+    // Watch provider so avatar in this page also updates reactively
+    final profile = context.watch<UserProfileProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F5F0),
@@ -255,30 +458,13 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
             ),
-            child: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: Color(0xFF1A1A1A),
-            ),
+            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Color(0xFF1A1A1A)),
           ),
         ),
         centerTitle: true,
-        title: const Text(
-          'My Profile',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
-          ),
-        ),
+        title: const Text('My Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -288,19 +474,9 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
               ),
-              child: const Icon(
-                Icons.notifications_none_rounded,
-                size: 20,
-                color: Color(0xFF1A1A1A),
-              ),
+              child: const Icon(Icons.notifications_none_rounded, size: 20, color: Color(0xFF1A1A1A)),
             ),
           ),
         ],
@@ -316,37 +492,37 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 Stack(
                   children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF4A9B6E),
-                          width: 2.5,
+                    GestureDetector(
+                      onTap: _isUploadingPhoto ? null : _showImagePickerOptions,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF4A9B6E), width: 2.5),
                         ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 38,
-                        backgroundImage: NetworkImage(
-                            'https://i.pravatar.cc/300'),
+                        child: ClipOval(child: _buildAvatar()),
                       ),
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4A9B6E),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_rounded,
-                          size: 13,
-                          color: Colors.white,
+                      child: GestureDetector(
+                        onTap: _isUploadingPhoto ? null : _showImagePickerOptions,
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: _isUploadingPhoto ? const Color(0xFF888888) : const Color(0xFF4A9B6E),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: _isUploadingPhoto
+                              ? const Padding(
+                            padding: EdgeInsets.all(5),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                              : const Icon(Icons.camera_alt_rounded, size: 13, color: Colors.white),
                         ),
                       ),
                     ),
@@ -358,12 +534,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _nameCtrl.text,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A1A1A),
-                        ),
+                        profile.name,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -378,20 +550,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.email_outlined,
-                            size: 13,
-                            color: Color(0xFF888888),
-                          ),
+                          const Icon(Icons.email_outlined, size: 13, color: Color(0xFF888888)),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
                               _emailCtrl.text,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF888888),
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF888888), fontWeight: FontWeight.w500),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -420,34 +584,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         RichText(
                           text: TextSpan(
                             children: [
-                              TextSpan(
-                                text: '$_healthScore',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                              const TextSpan(
-                                text: ' / 100',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF888888),
-                                ),
-                              ),
+                              TextSpan(text: '$_healthScore', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A))),
+                              const TextSpan(text: ' / 100', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF888888))),
                             ],
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Top 5% for your age',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF4A9B6E),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        const Text('Top 5% for your age', style: TextStyle(fontSize: 11, color: Color(0xFF4A9B6E), fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -462,32 +605,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _bmi.toString(),
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
+                        Text(_bmi.toString(), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A))),
                         const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 3,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
                             color: _getBMIColor().withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             _getBMICategory(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: _getBMIColor(),
-                              letterSpacing: 0.5,
-                            ),
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _getBMIColor(), letterSpacing: 0.5),
                           ),
                         ),
                       ],
@@ -504,66 +632,34 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 3))],
               ),
               child: Column(
                 children: [
-                  // ── Account Details (expandable) ──
                   _ExpandableMenuItem(
                     icon: Icons.person_outline_rounded,
                     label: 'Account Details',
                     isExpanded: _accountExpanded,
                     isFirst: true,
-                    onTap: () => setState(
-                            () => _accountExpanded = !_accountExpanded),
+                    onTap: () => setState(() => _accountExpanded = !_accountExpanded),
                     expandedContent: _buildAccountForm(),
                   ),
-
                   const _Divider(),
-
-                  // ── Goal Settings (expandable) ──
                   _ExpandableMenuItem(
                     icon: Icons.my_location_outlined,
                     label: 'Goal Settings',
                     isExpanded: _goalExpanded,
-                    onTap: () =>
-                        setState(() => _goalExpanded = !_goalExpanded),
+                    onTap: () => setState(() => _goalExpanded = !_goalExpanded),
                     expandedContent: _buildGoalForm(),
                   ),
-
                   const _Divider(),
-                  _MenuItem(
-                    icon: Icons.description_outlined,
-                    label: 'Medical Records',
-                    onTap: () {},
-                  ),
+                  _MenuItem(icon: Icons.description_outlined, label: 'Medical Records', onTap: () {}),
                   const _Divider(),
-                  _MenuItem(
-                    icon: Icons.trending_up_rounded,
-                    label: 'Progress Reports',
-                    onTap: () {},
-                  ),
+                  _MenuItem(icon: Icons.trending_up_rounded, label: 'Progress Reports', onTap: () {}),
                   const _Divider(),
-                  _MenuItem(
-                    icon: Icons.receipt_long_outlined,
-                    label: 'Terms & Conditions',
-                    onTap: () {},
-                  ),
+                  _MenuItem(icon: Icons.receipt_long_outlined, label: 'Terms & Conditions', onTap: () {}),
                   const _Divider(),
-                  _MenuItem(
-                    icon: Icons.shield_outlined,
-                    label: 'Privacy Policy',
-                    onTap: () {},
-                    isLast: true,
-                  ),
-
-                  // ── Logout ──
+                  _MenuItem(icon: Icons.shield_outlined, label: 'Privacy Policy', onTap: () {}, isLast: true),
                   const Divider(height: 1, color: Color(0xFFF0F0F0)),
                   InkWell(
                     onTap: () => _confirmLogout(context),
@@ -576,20 +672,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.logout_rounded,
-                            size: 18,
-                            color: Color(0xFFE53935),
-                          ),
+                          Icon(Icons.logout_rounded, size: 18, color: Color(0xFFE53935)),
                           SizedBox(width: 8),
-                          Text(
-                            'Logout Account',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFE53935),
-                            ),
-                          ),
+                          Text('Logout Account', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFE53935))),
                         ],
                       ),
                     ),
@@ -605,7 +690,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ── Account Details Form ────────────────────────────────────────────────────
+  // ── Account Form ───────────────────────────────────────────────────────────
   Widget _buildAccountForm() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -615,156 +700,87 @@ class _ProfilePageState extends State<ProfilePage> {
           _FormLabel('FULL NAME'),
           _FormField(controller: _nameCtrl, hint: 'Full name'),
           const SizedBox(height: 14),
-
           _FormLabel('EMAIL'),
-          _FormField(
-              controller: _emailCtrl,
-              hint: 'Email',
-              keyboardType: TextInputType.emailAddress),
+          _FormField(controller: _emailCtrl, hint: 'Email', keyboardType: TextInputType.emailAddress),
           const SizedBox(height: 14),
-
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('PHONE'),
-                    _FormField(
-                        controller: _phoneCtrl,
-                        hint: 'Phone',
-                        keyboardType: TextInputType.phone),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('PHONE'),
+                  _FormField(controller: _phoneCtrl, hint: 'Phone', keyboardType: TextInputType.phone),
+                ]),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('AGE'),
-                    _FormField(
-                        controller: _ageCtrl,
-                        hint: 'Age',
-                        keyboardType: TextInputType.number,
-                        onChanged: () => _calculateMetrics()),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('AGE'),
+                  _FormField(controller: _ageCtrl, hint: 'Age', keyboardType: TextInputType.number, onChanged: () => _calculateMetrics()),
+                ]),
               ),
             ],
           ),
           const SizedBox(height: 14),
-
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('GENDER'),
-                    _DropdownField(
-                      value: _gender,
-                      items: const ['Male', 'Female', 'Other'],
-                      onChanged: (v) {
-                        setState(() => _gender = v!);
-                        _calculateMetrics();
-                      },
-                    ),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('GENDER'),
+                  _DropdownField(
+                    value: _gender,
+                    items: const ['Male', 'Female', 'Other'],
+                    onChanged: (v) { setState(() => _gender = v!); _calculateMetrics(); },
+                  ),
+                ]),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('BLOOD GROUP'),
-                    _DropdownField(
-                      value: _bloodGroup,
-                      items: const [
-                        'A+', 'A-', 'B+', 'B-',
-                        'AB+', 'AB-', 'O+', 'O-'
-                      ],
-                      onChanged: (v) => setState(() => _bloodGroup = v!),
-                    ),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('BLOOD GROUP'),
+                  _DropdownField(
+                    value: _bloodGroup,
+                    items: const ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+                    onChanged: (v) => setState(() => _bloodGroup = v!),
+                  ),
+                ]),
               ),
             ],
           ),
           const SizedBox(height: 14),
-
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('HEIGHT (CM)'),
-                    _FormField(
-                        controller: _heightCtrl,
-                        hint: 'Height',
-                        keyboardType: TextInputType.number,
-                        onChanged: () => _calculateMetrics()),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('HEIGHT (CM)'),
+                  _FormField(controller: _heightCtrl, hint: 'Height', keyboardType: TextInputType.number, onChanged: () => _calculateMetrics()),
+                ]),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('WEIGHT (KG)'),
-                    _FormField(
-                        controller: _weightCtrl,
-                        hint: 'Weight',
-                        keyboardType: TextInputType.number,
-                        onChanged: () => _calculateMetrics()),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('WEIGHT (KG)'),
+                  _FormField(controller: _weightCtrl, hint: 'Weight', keyboardType: TextInputType.number, onChanged: () => _calculateMetrics()),
+                ]),
               ),
             ],
           ),
           const SizedBox(height: 20),
-
-          const Text(
-            'COMPREHENSIVE HEALTH HISTORY',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF4A9B6E),
-              letterSpacing: 0.5,
-            ),
-          ),
+          const Text('COMPREHENSIVE HEALTH HISTORY',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4A9B6E), letterSpacing: 0.5)),
           const SizedBox(height: 12),
-
           _FormLabel('ARE YOU DIABETIC?'),
           _DropdownField(
             value: _isDiabetic,
             items: const ['No', 'Yes', 'Pre-diabetic'],
-            onChanged: (v) {
-              setState(() => _isDiabetic = v!);
-              _calculateMetrics();
-            },
+            onChanged: (v) { setState(() => _isDiabetic = v!); _calculateMetrics(); },
           ),
           const SizedBox(height: 14),
-
           _FormLabel('MEDICAL CONDITIONS'),
-          _FormField(
-            controller: _medicalCtrl,
-            hint: '',
-            maxLines: 3,
-          ),
+          _FormField(controller: _medicalCtrl, hint: '', maxLines: 3),
           const SizedBox(height: 14),
-
           _FormLabel('ALLERGIES'),
-          _FormField(
-            controller: _allergiesCtrl,
-            hint: '',
-            maxLines: 3,
-          ),
+          _FormField(controller: _allergiesCtrl, hint: '', maxLines: 3),
           const SizedBox(height: 20),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -773,19 +789,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 backgroundColor: const Color(0xFF1A2332),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
-              child: const Text(
-                'SAVE CHANGES',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                ),
-              ),
+              child: const Text('SAVE CHANGES', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
             ),
           ),
         ],
@@ -793,7 +800,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ── Goal Settings Form ──────────────────────────────────────────────────────
+  // ── Goal Form ──────────────────────────────────────────────────────────────
   Widget _buildGoalForm() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -803,59 +810,27 @@ class _ProfilePageState extends State<ProfilePage> {
           _FormLabel('HEALTH OBJECTIVE'),
           _DropdownField(
             value: _healthObjective,
-            items: const [
-              'Weight loss',
-              'Muscle gain',
-              'Maintenance',
-              'Endurance',
-            ],
-            onChanged: (v) {
-              setState(() => _healthObjective = v!);
-              _calculateMetrics();
-            },
+            items: const ['Weight loss', 'Muscle gain', 'Maintenance', 'Endurance'],
+            onChanged: (v) { setState(() => _healthObjective = v!); _calculateMetrics(); },
           ),
           const SizedBox(height: 14),
-
           Row(
             children: [
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F8F4),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  decoration: BoxDecoration(color: const Color(0xFFF0F8F4), borderRadius: BorderRadius.circular(12)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'CURRENT WEIGHT',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF4A9B6E),
-                          letterSpacing: 0.4,
-                        ),
-                      ),
+                      const Text('CURRENT WEIGHT',
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF4A9B6E), letterSpacing: 0.4)),
                       const SizedBox(height: 6),
                       RichText(
                         text: TextSpan(
                           text: _weightCtrl.text,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                          children: const [
-                            TextSpan(
-                              text: ' kg',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF888888),
-                              ),
-                            ),
-                          ],
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A)),
+                          children: const [TextSpan(text: ' kg', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF888888)))],
                         ),
                       ),
                     ],
@@ -864,91 +839,44 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FormLabel('TARGET WEIGHT'),
-                    _FormField(
-                      controller: _targetWeightCtrl,
-                      hint: '0',
-                      keyboardType: TextInputType.number,
-                      onChanged: () => _calculateMetrics(),
-                    ),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FormLabel('TARGET WEIGHT'),
+                  _FormField(controller: _targetWeightCtrl, hint: '0', keyboardType: TextInputType.number, onChanged: () => _calculateMetrics()),
+                ]),
               ),
             ],
           ),
           const SizedBox(height: 14),
-
           _FormLabel('TARGET TIMEFRAME'),
           _DropdownField(
             value: _targetTimeframe,
-            items: const [
-              '4 Weeks (Aggressive)',
-              '8 Weeks (Moderate)',
-              '12 Weeks (Sustainable)',
-              '16 Weeks (Gradual)',
-            ],
+            items: const ['4 Weeks (Aggressive)', '8 Weeks (Moderate)', '12 Weeks (Sustainable)', '16 Weeks (Gradual)'],
             onChanged: (v) => setState(() => _targetTimeframe = v!),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Tip: 12 weeks is recommended for sustainable fat loss or muscle gain.',
-            style: TextStyle(
-              fontSize: 11,
-              color: Color(0xFF888888),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          const Text('Tip: 12 weeks is recommended for sustainable fat loss or muscle gain.',
+              style: TextStyle(fontSize: 11, color: Color(0xFF888888), fontStyle: FontStyle.italic)),
           const SizedBox(height: 16),
-
-          // Daily Calorie Budget card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A2332),
-              borderRadius: BorderRadius.circular(18),
-            ),
+            decoration: BoxDecoration(color: const Color(0xFF1A2332), borderRadius: BorderRadius.circular(18)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'DAILY CALORIE BUDGET',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF8A9BB0),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                    const Text('DAILY CALORIE BUDGET',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF8A9BB0), letterSpacing: 0.5)),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '$_dailyCalories',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
+                        Text('$_dailyCalories', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
                         const SizedBox(width: 4),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            'KCAL',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF8A9BB0),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
+                          child: Text('KCAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF8A9BB0), letterSpacing: 0.5)),
                         ),
                       ],
                     ),
@@ -957,59 +885,34 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _MacroBudgetCard(
-                      color: const Color(0xFF4A9B6E),
-                      label: 'PRO',
-                      value: _macros['PRO'] ?? '0g',
-                    ),
+                    _MacroBudgetCard(color: const Color(0xFF4A9B6E), label: 'PRO', value: _macros['PRO'] ?? '0g'),
                     const SizedBox(width: 10),
-                    _MacroBudgetCard(
-                      color: const Color(0xFFF5A623),
-                      label: 'CARB',
-                      value: _macros['CARB'] ?? '0g',
-                    ),
+                    _MacroBudgetCard(color: const Color(0xFFF5A623), label: 'CARB', value: _macros['CARB'] ?? '0g'),
                     const SizedBox(width: 10),
-                    _MacroBudgetCard(
-                      color: const Color(0xFFE53935),
-                      label: 'FAT',
-                      value: _macros['FAT'] ?? '0g',
-                    ),
+                    _MacroBudgetCard(color: const Color(0xFFE53935), label: 'FAT', value: _macros['FAT'] ?? '0g'),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
                 _saveUserData();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitness plan synced successfully!'),
-                    backgroundColor: Color(0xFF4A9B6E),
-                  ),
+                  const SnackBar(content: Text('Fitness plan synced successfully!'), backgroundColor: Color(0xFF4A9B6E)),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4A9B6E),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
-              child: const Text(
-                'SYNC FITNESS PLAN',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                ),
-              ),
+              child: const Text('SYNC FITNESS PLAN', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
             ),
           ),
         ],
@@ -1022,26 +925,22 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('Logout', style: TextStyle(fontWeight: FontWeight.w700)),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF888888))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF888888))),
           ),
           TextButton(
             onPressed: () async {
-              // Clear saved session on logout
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('is_logged_in', false);
               Navigator.of(ctx).pop();
-              Navigator.of(context).pushReplacementNamed('/login');
+              try {
+                await ApiService.logout();
+              } catch (_) {}
+              if (context.mounted) context.go(AppRoutes.login);
             },
-            child: const Text('Logout',
-                style: TextStyle(
-                    color: Color(0xFFE53935), fontWeight: FontWeight.w700)),
+            child: const Text('Logout', style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -1053,15 +952,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
 Widget _FormLabel(String text) => Padding(
   padding: const EdgeInsets.only(bottom: 6),
-  child: Text(
-    text,
-    style: const TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      color: Color(0xFF888888),
-      letterSpacing: 0.5,
-    ),
-  ),
+  child: Text(text,
+      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF888888), letterSpacing: 0.5)),
 );
 
 class _FormField extends StatelessWidget {
@@ -1086,30 +978,16 @@ class _FormField extends StatelessWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: (_) => onChanged?.call(),
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF1A1A1A),
-      ),
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFFBBBBBB)),
         filled: true,
         fillColor: const Color(0xFFF8F9F8),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4A9B6E), width: 1.5),
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE8E8E8))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE8E8E8))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4A9B6E), width: 1.5)),
       ),
     );
   }
@@ -1120,11 +998,7 @@ class _DropdownField extends StatelessWidget {
   final List<String> items;
   final ValueChanged<String?> onChanged;
 
-  const _DropdownField({
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
+  const _DropdownField({required this.value, required this.items, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -1139,17 +1013,10 @@ class _DropdownField extends StatelessWidget {
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-              color: Color(0xFF888888)),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1A1A),
-          ),
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF888888)),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
           onChanged: onChanged,
-          items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         ),
       ),
     );
@@ -1161,59 +1028,28 @@ class _MacroBudgetCard extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MacroBudgetCard({
-    required this.color,
-    required this.label,
-    required this.value,
-  });
+  const _MacroBudgetCard({required this.color, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF232E40),
-          borderRadius: BorderRadius.circular(12),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFF232E40), borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 4,
-              height: 18,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            Container(width: 4, height: 18, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF8A9BB0),
-                letterSpacing: 0.3,
-              ),
-            ),
+            Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF8A9BB0), letterSpacing: 0.3)),
             const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
+            Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
           ],
         ),
       ),
     );
   }
 }
-
-// ── Expandable Menu Item ────────────────────────────────────────────────────────
 
 class _ExpandableMenuItem extends StatelessWidget {
   final IconData icon;
@@ -1239,45 +1075,24 @@ class _ExpandableMenuItem extends StatelessWidget {
         InkWell(
           onTap: onTap,
           borderRadius: isFirst
-              ? const BorderRadius.only(
-            topLeft: Radius.circular(22),
-            topRight: Radius.circular(22),
-          )
+              ? const BorderRadius.only(topLeft: Radius.circular(22), topRight: Radius.circular(22))
               : BorderRadius.zero,
           child: Padding(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               children: [
                 Container(
                   width: 38,
                   height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon,
-                      size: 20, color: const Color(0xFF3A3A3A)),
+                  decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(icon, size: 20, color: const Color(0xFF3A3A3A)),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
+                Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)))),
                 AnimatedRotation(
                   turns: isExpanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 250),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 22,
-                    color: Color(0xFFBBBBBB),
-                  ),
+                  child: const Icon(Icons.keyboard_arrow_down_rounded, size: 22, color: Color(0xFFBBBBBB)),
                 ),
               ],
             ),
@@ -1286,17 +1101,13 @@ class _ExpandableMenuItem extends StatelessWidget {
         AnimatedCrossFade(
           firstChild: const SizedBox(width: double.infinity),
           secondChild: expandedContent,
-          crossFadeState: isExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
+          crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 300),
         ),
       ],
     );
   }
 }
-
-// ── Shared Helper Widgets ───────────────────────────────────────────────────────
 
 class _InfoChip extends StatelessWidget {
   final String label;
@@ -1306,18 +1117,8 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5EE),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2E7D50),
-        ),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFE8F5EE), borderRadius: BorderRadius.circular(20)),
+      child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D50))),
     );
   }
 }
@@ -1329,13 +1130,7 @@ class _StatCard extends StatelessWidget {
   final String label;
   final Widget child;
 
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
-    required this.label,
-    required this.child,
-  });
+  const _StatCard({required this.icon, required this.iconColor, required this.iconBg, required this.label, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -1344,13 +1139,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1359,23 +1148,11 @@ class _StatCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
                 child: Icon(icon, size: 16, color: iconColor),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF888888),
-                  ),
-                ),
-              ),
+              Expanded(child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF888888)))),
             ],
           ),
           const SizedBox(height: 10),
@@ -1393,13 +1170,7 @@ class _MenuItem extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
 
-  const _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.isFirst = false,
-    this.isLast = false,
-  });
+  const _MenuItem({required this.icon, required this.label, required this.onTap, this.isFirst = false, this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1418,28 +1189,12 @@ class _MenuItem extends StatelessWidget {
             Container(
               width: 38,
               height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(10)),
               child: Icon(icon, size: 20, color: const Color(0xFF3A3A3A)),
             ),
             const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: Color(0xFFBBBBBB),
-            ),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)))),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFBBBBBB)),
           ],
         ),
       ),
@@ -1452,11 +1207,6 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
-      height: 1,
-      indent: 20,
-      endIndent: 20,
-      color: Color(0xFFF0F0F0),
-    );
+    return const Divider(height: 1, indent: 20, endIndent: 20, color: Color(0xFFF0F0F0));
   }
 }

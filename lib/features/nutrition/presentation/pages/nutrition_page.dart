@@ -277,26 +277,31 @@ class _NutritionPageState extends State<NutritionPage> {
           const SizedBox(height: 10),
 
           // ── Meal rows ────────────────────────────────────────────────────
-          _MealRow(
-            icon: Icons.coffee_outlined,
-            iconColor: Colors.orange,
-            label: 'Breakfast',
-            kcal: '481 KCAL',
-          ),
-          const SizedBox(height: 10),
-          _MealRow(
-            icon: Icons.restaurant_outlined,
-            iconColor: Colors.green,
-            label: 'Lunch',
-            kcal: '641 KCAL',
-          ),
-          const SizedBox(height: 10),
-          _MealRow(
-            icon: Icons.nightlight_outlined,
-            iconColor: Colors.redAccent,
-            label: 'Dinner',
-            kcal: '481 KCAL',
-          ),
+        // In NutritionPage's build method, update the meal rows:
+
+        _MealRow(
+          icon: Icons.coffee_outlined,
+          iconColor: Colors.orange,
+          label: 'Breakfast',
+          kcal: '481 KCAL',
+          mealType: 0, // Add this
+        ),
+        const SizedBox(height: 10),
+        _MealRow(
+          icon: Icons.restaurant_outlined,
+          iconColor: Colors.green,
+          label: 'Lunch',
+          kcal: '641 KCAL',
+          mealType: 1, // Add this
+        ),
+        const SizedBox(height: 10),
+        _MealRow(
+          icon: Icons.nightlight_outlined,
+          iconColor: Colors.redAccent,
+          label: 'Dinner',
+          kcal: '481 KCAL',
+          mealType: 2, // Add this
+        ),
           const SizedBox(height: 14),
 
           // ── Diet Quality Score ───────────────────────────────────────────
@@ -406,94 +411,112 @@ class _NutritionPageState extends State<NutritionPage> {
           const SizedBox(height: 14),
 
           // ── Hydration Tracker ────────────────────────────────────────────
-          _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Hydration Tracker',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Hydration Tracker',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'GOAL: $_hydrationGoal GLASSES',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'GOAL: $_hydrationGoal GLASSES',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (_hydrationGlasses > 0) {
+                        setState(() => _hydrationGlasses--);
+                      }
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.remove, size: 18),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (_hydrationGlasses > 0) {
-                          setState(() => _hydrationGlasses--);
-                        }
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(10),
+
+                  // Bottle icons row
+                  Flexible(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          _hydrationGlasses,
+                              (index) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Image.asset('assets/images/glass-of-water.png', width: 40),
+                          ),
                         ),
-                        child: const Icon(Icons.remove, size: 18),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        if (_hydrationGlasses < _hydrationGoal) {
-                          setState(() => _hydrationGlasses++);
-                        }
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4A7C6F),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.add,
-                            size: 18, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${_hydrationGlasses * _mlPerGlass} ml',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF4A7C6F),
-                      ),
-                    ),
-                    Text(
-                      '${(_hydrationGoal - _hydrationGlasses) * _mlPerGlass} ml left',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: _hydrationGlasses / _hydrationGoal,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF4A7C6F)),
                   ),
+
+                  GestureDetector(
+                    onTap: () {
+                      if (_hydrationGlasses < _hydrationGoal) {
+                        setState(() => _hydrationGlasses++);
+                      }
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A7C6F),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.add,
+                          size: 18, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${_hydrationGlasses * _mlPerGlass} ml',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF4A7C6F),
+                    ),
+                  ),
+                  Text(
+                    '${(_hydrationGoal - _hydrationGlasses) * _mlPerGlass} ml left',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: _hydrationGlasses / _hydrationGoal,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation(Color(0xFF4A7C6F)),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
           const SizedBox(height: 14),
 
           // ── Weekly Trends ────────────────────────────────────────────────
@@ -664,56 +687,70 @@ class _MealRow extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String kcal;
+  final int mealType; // Add this: 0=Breakfast, 1=Lunch, 2=Dinner
+
   const _MealRow({
     required this.icon,
     required this.iconColor,
     required this.label,
     required this.kcal,
+    required this.mealType,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-            ),
-          ),
-          Column(
-            children: [
-              const Text(
-                '0',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+    return GestureDetector(
+      onTap: () {
+        // Open bottom sheet when tapping the entire row
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AddToMealSheet(selectedMode: 0, initialMealType: mealType),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 4),
-              Text(
-                'OF $kcal',
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
-            ],
-          ),
+            ),
+            Column(
+              children: [
+                const Text(
+                  '0',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'OF $kcal',
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              ],
+            ),
 
-          const SizedBox(width: 10),
-          const Icon(Icons.add, size: 20, color: Color(0xFF4A7C6F)),
-        ],
+            const SizedBox(width: 10),
+            const Icon(Icons.add, size: 20, color: Color(0xFF4A7C6F)),
+          ],
+        ),
       ),
     );
   }
