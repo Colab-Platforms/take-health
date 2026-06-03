@@ -62,8 +62,8 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
 
   String _mapDietPreference(String pref) {
     switch (pref) {
-      case 'Non-Vegetarian': return 'non_vegetarian';
-      case 'Vegetarian':     return 'vegetarian';
+      case 'Non-Vegetarian': return 'non-vegetarian';  // Try with hyphen
+      case 'Vegetarian':     return 'vegetarian';       // Full word
       case 'Vegan':          return 'vegan';
       case 'Keto':           return 'keto';
       case 'Pescatarian':    return 'pescatarian';
@@ -109,11 +109,9 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
     setState(() => _isLoading = true);
 
     try {
-      // ApiService.updateProfile() automatically attaches the Bearer token
-      // from SharedPreferences and handles 401 + retry logic for you.
       await ApiService.updateProfile({
-        "name": "",   // Pass name from earlier sign-up screen if available
-        "phone": "",  // Pass phone from earlier sign-up screen if available
+        "name": "",
+        "phone": "",
         "profile": {
           "age": int.tryParse(_ageController.text) ?? 0,
           "gender": _mapGender(selectedGender!),
@@ -240,9 +238,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   const Text(
                     'Are you diabetic?',
                     style: TextStyle(
@@ -251,16 +247,12 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                       color: Color(0xFF0D4D3B),
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   Text(
                     'This helps us customize your health plan',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
-
                   const SizedBox(height: 24),
-
                   ..._diabeticOptions.map((option) {
                     return RadioListTile<String>(
                       title: Text(option, style: const TextStyle(fontSize: 16)),
@@ -275,9 +267,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                       contentPadding: EdgeInsets.zero,
                     );
                   }).toList(),
-
                   const SizedBox(height: 16),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,

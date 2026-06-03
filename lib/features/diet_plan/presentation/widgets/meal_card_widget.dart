@@ -7,11 +7,13 @@ import 'food_icon_stack.dart';
 class MealCardWidget extends StatelessWidget {
   final MealCard meal;
   final VoidCallback onTap;
+  final bool isDone;
 
   const MealCardWidget({
     super.key,
     required this.meal,
     required this.onTap,
+    this.isDone = false,
   });
 
   @override
@@ -96,7 +98,9 @@ class MealCardWidget extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              FoodIconStack(colorHexList: meal.iconColors),
+              FoodIconStack(
+                imageUrls: meal.options.map((o) => o.imageUrl).toList(),
+              ),
               const SizedBox(width: 8),
               Text(
                 '${meal.items} ITEMS',
@@ -138,15 +142,34 @@ class MealCardWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: DietColors.primaryGreen,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(Icons.arrow_outward_rounded,
-                color: Colors.white, size: 20),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDone ? Colors.green.shade600 : DietColors.primaryGreen,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  isDone ? Icons.check_rounded : Icons.arrow_outward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              if (isDone) ...[
+                const SizedBox(width: 12),
+                Text(
+                  "LOGGED",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.green.shade700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

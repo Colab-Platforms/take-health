@@ -4,6 +4,26 @@ import 'dart:io';
 
 import 'clinical_page.dart';
 
+// ─── Colors ──────────────────────────────────────────────────────────────────
+const _kGreen      = Color(0xFF4A7C6F);
+const _kGreenLight = Color(0xFFE8F2EF);
+const _kInk        = Color(0xFF1A1A1A);
+const _kMuted      = Color(0xFF888888);
+const _kBg         = Color(0xFFF0F4F0);
+const _kShadow     = Color(0x0D000000);
+
+// ─── Model ───────────────────────────────────────────────────────────────────
+class UploadedReport {
+  final File   file;
+  final String name;
+  final DateTime uploadedAt;
+  UploadedReport({required this.file, required this.name, required this.uploadedAt});
+}
+
+// ─── Top-level list — survives navigation, hot-reload, tab switches ───────────
+final List<UploadedReport> uploadedReportsList = [];
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
 
@@ -11,484 +31,363 @@ class ReportsPage extends StatefulWidget {
   State<ReportsPage> createState() => _ReportsPageState();
 }
 
-class _ReportsPageState extends State<ReportsPage> {
-  static const Color _cardGreen = Color(0xFF4A7C6F);
-  final ImagePicker _imagePicker = ImagePicker();
+class _ReportsPageState extends State<ReportsPage>
+    with AutomaticKeepAliveClientMixin {
 
-  // Store uploaded files
-  File? _selectedFile;
-  String? _selectedFileName;
-  bool _isUploading = false;
-  bool _uploadSuccess = false;
+  @override
+  bool get wantKeepAlive => true;
 
-  // Show options dialog
-  Future<void> _showImageSourceDialog() async {
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading  = false;
+  UploadedReport? _lastUploaded;
+
+  // ════════════════════════ UPLOAD LOGIC ═══════════════════════════════════
+
+  Future<void> _showSourceDialog() async {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: _cardGreen),
-              title: const Text('Choose from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageFromGallery();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: _cardGreen),
-              title: const Text('Take a Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageFromCamera();
-              },
-            ),
-          ],
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              ListTile(
+                leading: _sheetIcon(Icons.photo_library_rounded),
+                title: const Text('Choose from Gallery',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                onTap: () { Navigator.pop(ctx); _pickImage(ImageSource.gallery); },
+              ),
+              ListTile(
+                leading: _sheetIcon(Icons.camera_alt_rounded),
+                title: const Text('Take a Photo',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                onTap: () { Navigator.pop(ctx); _pickImage(ImageSource.camera); },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Pick image from gallery
-  Future<void> _pickImageFromGallery() async {
-    try {
-      final XFile? pickedFile = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
+  Widget _sheetIcon(IconData icon) => Container(
+    width: 40, height: 40,
+    decoration: BoxDecoration(color: _kGreenLight, borderRadius: BorderRadius.circular(12)),
+    child: Icon(icon, color: _kGreen, size: 20),
+  );
 
-      if (pickedFile != null) {
-        setState(() {
-          _selectedFile = File(pickedFile.path);
-          _selectedFileName = pickedFile.name;
-          _uploadSuccess = false;
-        });
-        await _uploadFile();
-      }
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? picked = await _picker.pickImage(source: source, imageQuality: 85);
+      if (picked != null) await _uploadFile(File(picked.path), picked.name);
     } catch (e) {
-      _showErrorSnackBar('Failed to pick image: $e');
+      _snack('Failed to pick image: $e', isError: true);
     }
   }
 
-  // Pick image from camera
-  Future<void> _pickImageFromCamera() async {
+  Future<void> _uploadFile(File file, String name) async {
+    setState(() { _isUploading = true; _lastUploaded = null; });
     try {
-      final XFile? pickedFile = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        setState(() {
-          _selectedFile = File(pickedFile.path);
-          _selectedFileName = pickedFile.name;
-          _uploadSuccess = false;
-        });
-        await _uploadFile();
-      }
-    } catch (e) {
-      _showErrorSnackBar('Failed to take photo: $e');
-    }
-  }
-
-  // Upload file
-  Future<void> _uploadFile() async {
-    setState(() {
-      _isUploading = true;
-    });
-
-    try {
-      // Simulate upload delay - Replace with actual API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // TODO: Replace with your actual API call
-      // Example:
-      // final response = await yourApiService.uploadReport(_selectedFile!);
-      // if (response.success) {
-      //   setState(() { _uploadSuccess = true; });
-      //   _showSuccessSnackBar('$_selectedFileName uploaded successfully!');
-      // }
-
-      // Simulate success
+      await Future.delayed(const Duration(seconds: 2)); // replace with real API
+      final report = UploadedReport(file: file, name: name, uploadedAt: DateTime.now());
       setState(() {
-        _uploadSuccess = true;
+        uploadedReportsList.insert(0, report);          // newest first
+        _lastUploaded = report;
       });
-
-      if (mounted) {
-        _showSuccessSnackBar('$_selectedFileName uploaded successfully!');
-      }
+      _snack('$name uploaded successfully!');
     } catch (e) {
-      if (mounted) {
-        _showErrorSnackBar('Upload failed: $e');
-        setState(() {
-          _selectedFile = null;
-          _selectedFileName = null;
-          _uploadSuccess = false;
-        });
-      }
+      _snack('Upload failed: $e', isError: true);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
-  // Clear selected file
-  void _clearSelectedFile() {
-    setState(() {
-      _selectedFile = null;
-      _selectedFileName = null;
-      _uploadSuccess = false;
-    });
-  }
-
-  // Show success snackbar
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
+  void _confirmDelete(int index) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Report',
+            style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(
+          'Remove "${uploadedReportsList[index].name}" from your archives?',
+          style: const TextStyle(color: _kMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: _kMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                final removed = uploadedReportsList.removeAt(index);
+                if (_lastUploaded == removed) _lastUploaded = null;
+              });
+              _snack('Report removed');
+            },
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }
 
-  // Show error snackbar
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+  void _snack(String msg, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: isError ? Colors.red : _kGreen,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      duration: const Duration(seconds: 3),
+    ));
   }
+
+  // ════════════════════════ BUILD ══════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     return Stack(
       children: [
         ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           children: [
-            // Smart Lab Insights header
             _buildHeader(),
             const SizedBox(height: 20),
-
-            // Upload Lab Report card
             _buildUploadCard(),
             const SizedBox(height: 16),
-
-            // Comparative Analytics card
             _buildComparativeCard(),
             const SizedBox(height: 16),
-
-            // Recent Archives card
-            _buildRecentArchivesCard(),
+            _buildArchivesCard(),
           ],
         ),
 
         // Loading overlay
         if (_isUploading)
           Container(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withOpacity(.45),
             child: const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(_cardGreen),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(_kGreen)),
+                  SizedBox(height: 18),
+                  Text('Uploading report...',
+                      style: TextStyle(color: Colors.white,
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                ],
               ),
             ),
           ),
 
-        // FAB
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton(
-            heroTag: 'chat_reports',
-            mini: true,
-            backgroundColor: _cardGreen,
-            foregroundColor: Colors.white,
-            elevation: 4,
-            onPressed: () {
-              // TODO: Implement chat functionality
-            },
-            child: const Icon(Icons.chat_bubble_outline, size: 18),
-          ),
-        ),
+
       ],
     );
   }
 
+  // ─── Header ──────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFDDDDDD), width: 1),
-              ),
-              child: const Icon(
-                Icons.monitor_heart_outlined,
-                size: 18,
-                color: _cardGreen,
-              ),
+        Row(children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white, shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFDDDDDD)),
             ),
-            const SizedBox(width: 10),
-            const Text(
-              'Smart Lab Insights',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-          ],
-        ),
+            child: const Icon(Icons.monitor_heart_outlined, size: 18, color: _kGreen),
+          ),
+          const SizedBox(width: 10),
+          const Text('Smart Lab Insights',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: _kInk)),
+        ]),
         const SizedBox(height: 10),
         const Text(
-          'Upload your medical reports and let our AI translate complex jargon into actionable health insights and visualize your progress over time.',
-          style: TextStyle(
-            fontSize: 13,
-            color: Color(0xFF555555),
-            height: 1.5,
-          ),
+          'Upload your medical reports and let our AI translate complex jargon '
+              'into actionable health insights and visualize your progress over time.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF555555), height: 1.5),
         ),
       ],
     );
   }
 
+  // ─── Upload Card ─────────────────────────────────────────────────────────
   Widget _buildUploadCard() {
+    final bool hasLast = _lastUploaded != null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: Colors.white, borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: _kShadow, blurRadius: 10, offset: Offset(0, 3))],
       ),
       child: Column(
         children: [
-          // Upload icon
           Container(
-            width: 68,
-            height: 68,
+            width: 68, height: 68,
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F4F0),
-              shape: BoxShape.circle,
+              color: _kBg, shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFDDDDDD), width: 1.2),
             ),
             child: Icon(
-              _uploadSuccess ? Icons.check_circle : Icons.upload_file,
+              hasLast ? Icons.check_circle : Icons.upload_file,
               size: 30,
-              color: _uploadSuccess ? Colors.green : _cardGreen,
+              color: hasLast ? Colors.green : _kGreen,
             ),
           ),
           const SizedBox(height: 18),
           Text(
-            _selectedFile != null ? 'LAB REPORT READY' : 'UPLOAD LAB REPORT',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
-              letterSpacing: 0.5,
-            ),
+            hasLast ? 'LAB REPORT READY' : 'UPLOAD LAB REPORT',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900,
+                color: _kInk, letterSpacing: .5),
           ),
           const SizedBox(height: 8),
           Text(
-            _selectedFile != null
-                ? _uploadSuccess
-                    ? 'Ready for analysis'
-                    : 'Uploading in progress...'
+            hasLast ? 'Ready for analysis'
                 : 'Tap to select image from gallery or camera',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF888888),
-              height: 1.5,
-            ),
+            style: const TextStyle(fontSize: 13, color: _kMuted, height: 1.5),
           ),
           const SizedBox(height: 22),
 
-          // Show selected file info
-          if (_selectedFile != null && !_isUploading) ...[
+          if (hasLast && !_isUploading) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _uploadSuccess
-                    ? Colors.green.withOpacity(0.1)
-                    : _cardGreen.withOpacity(0.1),
+                color: Colors.green.withOpacity(.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _uploadSuccess ? Colors.green : _cardGreen,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.green.shade300),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    _uploadSuccess ? Icons.check_circle : Icons.image,
-                    color: _uploadSuccess ? Colors.green : _cardGreen,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
+                  const Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+                  const SizedBox(width: 10),
+                  // File name + status
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _selectedFileName ?? 'File selected',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (_uploadSuccess)
-                          const Text(
-                            'Upload completed successfully',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.green,
-                            ),
-                          ),
+                        Text(_lastUploaded!.name,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const Text('Upload completed successfully',
+                            style: TextStyle(fontSize: 11, color: Colors.green)),
                       ],
                     ),
                   ),
-                  if (!_uploadSuccess)
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: _clearSelectedFile,
-                      tooltip: 'Remove file',
+                  const SizedBox(width: 8),
+                  // Delete button
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        uploadedReportsList.remove(_lastUploaded);
+                        _lastUploaded = null;
+                      });
+                      _snack('File removed');
+                    },
+                    child: Container(
+                      width: 32, height: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBEB),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.delete_outline_rounded,
+                          size: 17, color: Colors.red),
                     ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
           ],
 
-          // Dynamic button based on upload status
-          if (!_isUploading)
+          if (!_isUploading) ...[
             GestureDetector(
-// In _buildUploadCard method, update the onTap for ANALYZE REPORT button
-              onTap: _uploadSuccess
-                  ? () {
-                      // Navigate to analysis report screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ClinicalSynthesisScreen(),
-                        ),
-                      );
-                    }
-                  : _showImageSourceDialog,
+              onTap: hasLast
+                  ? () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ClinicalSynthesisScreen()),
+              ).then((_) {
+                if (mounted) setState(() => _lastUploaded = null);
+              })
+                  : _showSourceDialog,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 48, vertical: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 15),
                 decoration: BoxDecoration(
-                  color: _uploadSuccess ? Colors.green : _cardGreen,
+                  color: hasLast ? Colors.green : _kGreen,
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Text(
-                  _uploadSuccess ? 'ANALYZE REPORT' : 'SELECT FILE',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
+                  hasLast ? 'ANALYZE REPORT' : 'SELECT FILE',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
+                      color: Colors.white, letterSpacing: 1.2),
                 ),
               ),
             ),
+            if (hasLast) ...[
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _showSourceDialog,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white, borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: _kGreen, width: 1.5),
+                  ),
+                  child: const Text('UPLOAD ANOTHER',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+                          color: _kGreen, letterSpacing: 1)),
+                ),
+              ),
+            ],
+          ],
 
-          // Uploading state
           if (_isUploading)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 15),
               decoration: BoxDecoration(
-                color: Colors.grey,
+                color: Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: const Text(
-                'UPLOADING...',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
+              child: const Text('UPLOADING...',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
+                      color: Colors.white, letterSpacing: 1.2)),
             ),
-
-          // Upload another button after success
-          if (_uploadSuccess) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                _clearSelectedFile();
-                _showImageSourceDialog();
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 48, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: _cardGreen, width: 1.5),
-                ),
-                child: const Text(
-                  'UPLOAD ANOTHER',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: _cardGreen,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 
+  // ─── Comparative Analytics ────────────────────────────────────────────────
   Widget _buildComparativeCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: Colors.white, borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: _kShadow, blurRadius: 10, offset: Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,65 +396,35 @@ class _ReportsPageState extends State<ReportsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4F0),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.bar_chart_rounded,
-                  size: 22,
-                  color: _cardGreen,
-                ),
+                width: 40, height: 40,
+                decoration: BoxDecoration(color: _kBg, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.bar_chart_rounded, size: 22, color: _kGreen),
               ),
               const SizedBox(width: 12),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'COMPARATIVE\nANALYTICS',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF1A1A1A),
-                      letterSpacing: 0.3,
-                      height: 1.3,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Trend mapping between two labs',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF888888),
-                    ),
-                  ),
-                ],
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('COMPARATIVE\nANALYTICS',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900,
+                            color: _kInk, letterSpacing: .3, height: 1.3)),
+                    SizedBox(height: 4),
+                    Text('Trend mapping between two labs',
+                        style: TextStyle(fontSize: 12, color: _kMuted)),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 32),
           Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.monitor_heart_outlined,
-                  size: 40,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Select report(s) from history\nto visualize analytics',
+            child: Column(children: [
+              Icon(Icons.monitor_heart_outlined, size: 40, color: Colors.grey.shade300),
+              const SizedBox(height: 12),
+              Text('Select report(s) from history\nto visualize analytics',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade400,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade400, height: 1.5)),
+            ]),
           ),
           const SizedBox(height: 16),
         ],
@@ -563,74 +432,194 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  Widget _buildRecentArchivesCard() {
+  // ─── Recent Archives ─────────────────────────────────────────────────────
+  Widget _buildArchivesCard() {
+    final int count = uploadedReportsList.length;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: Colors.white, borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: _kShadow, blurRadius: 10, offset: Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header + badge
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4F0),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.history_rounded,
-                  size: 22,
-                  color: _cardGreen,
-                ),
+                width: 40, height: 40,
+                decoration: BoxDecoration(color: _kBg, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.history_rounded, size: 22, color: _kGreen),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'RECENT ARCHIVES',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: 0.5,
+              const Expanded(
+                child: Text('RECENT ARCHIVES',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900,
+                        color: _kInk, letterSpacing: .5)),
+              ),
+              // Count badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: count > 0 ? _kGreenLight : const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$count report${count == 1 ? '' : 's'}',
+                  style: TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .3,
+                    color: count > 0 ? _kGreen : Colors.grey,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 28),
-          Center(
-            child: Text(
-              _selectedFile != null && _uploadSuccess
-                  ? '1 report uploaded'
-                  : 'No records found',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade400,
-                fontStyle: FontStyle.italic,
-              ),
+
+          // Empty state
+          if (count == 0) ...[
+            const SizedBox(height: 28),
+            Center(
+              child: Text('No records found',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade400,
+                      fontStyle: FontStyle.italic)),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
+
+          // Report tiles
+          if (count > 0) ...[
+            const SizedBox(height: 16),
+            for (int i = 0; i < count; i++) _buildTile(i),
+          ],
         ],
       ),
     );
   }
 
-// Get formatted date
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+  // ─── Report tile  (overflow-safe layout) ─────────────────────────────────
+  Widget _buildTile(int index) {
+    final UploadedReport report = uploadedReportsList[index];
+    final String date = _fmtDate(report.uploadedAt);
+    final String time = _fmtTime(report.uploadedAt);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _kBg, borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE0EAE7)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Row 1: thumbnail + name/date ──────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Thumbnail
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 46, height: 46,
+                    color: Colors.white,
+                    child: _isImage(report.name)
+                        ? Image.file(report.file, fit: BoxFit.cover)
+                        : const Icon(Icons.picture_as_pdf_rounded,
+                        color: Color(0xFFE53935), size: 24),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Name + date — Expanded prevents right overflow
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(report.name,
+                          style: const TextStyle(fontSize: 13,
+                              fontWeight: FontWeight.w700, color: _kInk),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 5),
+                      Row(children: [
+                        const Icon(Icons.access_time_rounded,
+                            size: 11, color: _kMuted),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text('$date  $time',
+                              style: const TextStyle(fontSize: 11, color: _kMuted),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ]),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Row 2: Analyze + Delete — guaranteed no overflow ──────────
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ClinicalSynthesisScreen()),
+                    ).then((_) {
+                      if (mounted) setState(() => _lastUploaded = null);
+                    }),
+                    child: Container(
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _kGreen,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text('Analyze',
+                          style: TextStyle(fontSize: 12,
+                              fontWeight: FontWeight.w800, color: Colors.white)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => _confirmDelete(index),
+                  child: Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFEBEB),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.delete_outline_rounded,
+                        size: 18, color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  bool _isImage(String name) {
+    final String ext = name.split('.').last.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'webp', 'heic'].contains(ext);
+  }
+
+  String _fmtDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/'
+          '${d.month.toString().padLeft(2, '0')}/'
+          '${d.year}';
+
+  String _fmtTime(DateTime d) =>
+      '${d.hour.toString().padLeft(2, '0')}:'
+          '${d.minute.toString().padLeft(2, '0')}';
 }
